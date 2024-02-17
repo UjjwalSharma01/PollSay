@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@100;200;300;400&display=swap');
+
+:root {
+    --pri-bg-color: rgb(10, 10, 10);
+    --sec-bg-color: rgb(71, 70, 70);
+    --pri-color: #121212;
+    --sec-color: #242424;
+    --font-color1: #a7a7a7;
+    --font-color2: white;
+    --border-rad: 8px;
+}
+
+* {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.1) rgba(0, 0, 0, 0.5);
+}
+
+*::-webkit-scrollbar {
+    width: 12px;
+}
+
+*::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+*::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    border: 3px solid rgba(0, 0, 0, 0.5);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Dark mode */
+body {
+    background-color: var(--pri-bg-color);
+    color: #ffffff;
+}
+
+.hero {
+    display: flex;
+    flex-direction: column;
+    /* justify-content: center; */
+    align-items: center;
+}
+
+#user-auth {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+
+}
+
+.user-authentication {
+    display: flex;
+    flex-direction: column;
+    gap: 49px;
+}
+
+/* Header Logo */
+nav {
+    background-color: var(--sec-bg-color);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px;
+    margin-bottom: 20px;
+}
+
+nav p{
+    font-size: 104px;
+    font-weight: 200;
+}
+
+nav img{
+    height: 150px;
+}
+
+/* User Authentication and Poll Vote Input Fields */
+input:focus::placeholder {
+    font-size: 12px;
+    transform: translateY(-20px);
+    transition: all 0.3s ease; /* Add a smooth transition */
+}
+
+#user-auth input[type="email"],
+#user-auth input[type="text"],
+#poll-vote input[type="radio"] {
+    padding: 15px;
+    font-size: 1.5em;
+    border-radius: 8px;
+}
+
+/* Styling radio buttons to be bigger and square */
+input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    border-radius: 0;
+}
+
+input[type="radio"]+label {
+    font-size: 20px;
+}
+
+.poll{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    font-size: 23px;
+}
+
+.hero button {
+    padding: 10px;
+    font-size: 1.4em;
+    border-radius: 8px;
+    cursor: pointer;
+    background: grey;
+    border: none;
+    transition: background 1s ease-in-out;
+}
+
+.hero button:hover {
+    background: white;
+}
+
+@media only screen and (max-width : 450px) {
+    nav{
+        margin-bottom: 100px;
+    }
+
+    nav img{
+        height: 40px;
+    }
+    nav p{
+        font-size: 30px;
+    }
+
+    #user-auth input[type="email"],
+    #user-auth input[type="text"],
+    #poll-vote input[type="radio"] {
+        padding: 10px;
+        font-size: 1.2em;
+    }
+}  
+
+footer {
+    position: fixed;
+    left: 0;
+    bottom: 0;
+    width: 100%;
+    background-color: var(--sec-bg-color); /* choose the color you like */
+    color: white;
+    text-align: center;
+    padding: 10px 0;
+}
