@@ -15,7 +15,7 @@ const submitButton = document.getElementById('submitButton');
 
 submitButton.addEventListener('click', function () {
     const enteredEmail = emailInput.value;
-    const emailPattern = /^(00[0-9]|00[0-9]|060)17702722cse@vips\.edu$/;
+    const emailPattern = /^\d{2}17702722_cse@vips\.edu$/;
 
     // Check if the entered email matches the pattern
     if (!emailPattern.test(enteredEmail)) {
@@ -25,18 +25,26 @@ submitButton.addEventListener('click', function () {
     }
     else{
         alert('Enter the OTP sent to your email address');
-
-        /*Display Poll Question */
-        let hero = document.getElementsByClassName("hero")[0].children[0].innerHTML = 
-        `
-            <h2 id="poll-question">Poll Question goes here</h2>
-            <form id="poll-vote">
-                <input type="radio" id="yes" name="vote" value="yes">
-                <label for="yes">Yes</label><br>
-                <input type="radio" id="no" name="vote" value="no">
-                <label for="no">No</label>
-            </form>
-            <button id="submitButton" type="submit">Submit</button>
-        `
+        // Display poll question code...
     }
 });
+
+// function to send otp starts here
+
+sendOtpButton.addEventListener('click', function () {
+    const enteredEmail = emailInput.value;
+    // fixed the error in the emailPattern
+    const emailPattern = /^\d+17702722_cse@vips\.edu$/;
+    // Check if the entered email matches the pattern
+    if (!emailPattern.test(enteredEmail)) {
+        alert('Sorry! That email is not permitted in this voting session');
+        emailInput.value = ''; // Clear the input
+        emailInput.style.backgroundColor = "pink";
+    }
+    else{
+        alert('OTP has been sent to your email address');
+        // Code to send OTP goes here
+    }
+});
+
+// function to send otp ends here
