@@ -1,0 +1,21 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "polls": {
+      ".read": "auth != null",
+      ".write": "auth != null",
+      "$pollId": {
+        ".validate": "newData.child('email').val() === auth.token.email",
+        "question": {
+          ".validate": "newData.isString()"
+        },
+        "options": {
+          "$optionId": {
+            ".validate": "newData.isString()"
+          }
+        }
+      }
+    }
+  }
+}
