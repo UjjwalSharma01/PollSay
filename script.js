@@ -14,9 +14,9 @@ function sendOTP(enteredEmail) {
     otp = Math.floor(100000 + Math.random() * 900000);
     const emailBody = 'OTP: ' + otp;
     Email.send({
-        SecureToken : "xxx", //Add ur secure Token
+        SecureToken : "11cb963f-f8e0-416e-b62d-55c0f7c65bbd",
         To : enteredEmail,
-        From : "xxx@xxx.com", //Add ur email
+        From : "shincha21321@gmail.com", //RN, only this email will work
         Subject : "POLLSAY Voting Session OTP",
         Body : emailBody
     }).then((val)=>{
