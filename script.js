@@ -8,14 +8,39 @@
 // // const firestore = firebase.firestore();
 // const database = firebase.database(); //Realtime Db use krenge
 
+let acceptSubmission = false;
+let otp = null;
+function sendOTP(enteredEmail) {
+    otp = Math.floor(100000 + Math.random() * 900000);
+    const emailBody = 'OTP: ' + otp;
+    Email.send({
+        SecureToken : "11cb963f-f8e0-416e-b62d-55c0f7c65bbd",
+        To : enteredEmail,
+        From : "shincha21321@gmail.com", //RN, only this email will work
+        Subject : "POLLSAY Voting Session OTP",
+        Body : emailBody
+    }).then((val)=>{
+        if(val == "OK"){
+            alert("OTP Sent Successfully")
+            acceptSubmission = true
+            setTimeout(() => {
+                acceptSubmission = false;
+            }, 60 * 1000);
+        }
+        else{
+            alert(val);
+        }
+    });
+}
 
 /*only allow certain email id's to vote*/
 const emailInput = document.getElementById('email');
+const sendOtpButton = document.getElementById('sendOtpButton');
 const submitButton = document.getElementById('submitButton');
 
-submitButton.addEventListener('click', function () {
+sendOtpButton.addEventListener('click', function () {
     const enteredEmail = emailInput.value;
-    const emailPattern = /^\d{2}17702722_cse@vips\.edu$/;
+    const emailPattern = /^(0[0-9]{2}|[1-9][0-9]{2})17702722_cse@vips\.edu$/;
 
     // Check if the entered email matches the pattern
     if (!emailPattern.test(enteredEmail)) {
@@ -24,56 +49,23 @@ submitButton.addEventListener('click', function () {
         emailInput.style.backgroundColor = "pink";
     }
     else{
-        alert('Enter the OTP sent to your email address');
+        sendOTP(enteredEmail);
         // Display poll question code...
     }
 });
 
-// function to send otp starts here
-
-sendOtpButton.addEventListener('click', function () {
-    const enteredEmail = emailInput.value;
-    // fixed the error in the emailPattern
-    const emailPattern = /^\d+17702722_cse@vips\.edu$/;
-    // Check if the entered email matches the pattern
-    if (!emailPattern.test(enteredEmail)) {
-        alert('Sorry! That email is not permitted in this voting session');
-        emailInput.value = ''; // Clear the input
-        emailInput.style.backgroundColor = "pink";
+submitButton.addEventListener('click', () => {
+    if (acceptSubmission) {
+        if(otp == document.getElementById('otp').value){
+            alert('OTP Verified');
+            // Display poll question code...
+        }
+        else{
+            alert('Invalid OTP');
+        }
     }
-    else {
-        // Generate a random OTP
-        const otp = Math.floor(100000 + Math.random() * 900000);
-
-        // Prepare the data to send
-        const data = new FormData();
-        data.append('from', 'Your Email Here'); // Replace with your email
-        data.append('to', enteredEmail);
-        data.append('subject', 'Your OTP for voting session');
-        data.append('text', `Your OTP is ${otp}`);
-
-        // Send the OTP using the Mailgun API
-        fetch('https://api.mailgun.net/v3/sandbox469d82e0b23843b08be9bc65c82ca5bf.mailgun.org/messages', {
-            method: 'POST',
-            headers: {
-                'Authorization': 'Basic ' + btoa('api:key-d6ed35c0f0213116a52dda4e6759b7fd-408f32f3-69d34184')
-            },
-            body: data
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message === 'Queued. Thank you.') {
-                alert('OTP has been sent to your email address');
-            } else {
-                alert('Failed to send OTP');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-        });
+    else{
+        alert('OTP Expired or Invalid');
     }
-}
-);
+});
 
-// https://api.mailgun.net/v3/sandbox469d82e0b23843b08be9bc65c82ca5bf.mailgun.org
-// d0b16b2c3c1e3ece3c1ab235b0832c69-408f32f3-7149e360

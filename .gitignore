@@ -1,3 +1,4 @@
 *.code-workspacesendgrid.env
 sendgrid.env
 sendgrid.env
+/*.code-workspace
