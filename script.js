@@ -62,25 +62,3 @@ submitButton.addEventListener('click', () => {
     }
 });
 
-// signup form js starts here
-import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-const auth = getAuth(app);
-
-document.getElementById('signup-form').addEventListener('submit', (event) => {
-    event.preventDefault();
-
-    const email = document.getElementById('signup-email').value;
-    const password = document.getElementById('signup-password').value;
-
-    createUserWithEmailAndPassword(auth, email, password)
-        .then((userCredential) => {
-            // The user has been signed up
-            const user = userCredential.user;
-            console.log('User signed up:', user);
-        })
-        .catch((error) => {
-            // There was an error signing up the user
-            console.error('Error signing up:', error);
-        });
-});

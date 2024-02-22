@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="styles.css">
     <!-- Add favicon -->
     <!-- <link rel="icon" href="favicon.ico" type="image/x-icon> -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 </head>
 
 <body>
@@ -31,11 +32,14 @@
                 <button id="sendOtpButton" type="button">Send OTP</button> 
                 <input type="text" id="otp" placeholder="Enter OTP" required>
             </form>
+            <div class="g-recaptcha" data-sitekey="6LeDFXwpAAAAAFNoesJgFzv8OZzKSfl00j6coJG8"></div>
             <button id="submitButton" type="submit">Submit</button> 
             <div class="poll">
             </div>
         </section>
     </div>
+
+  
 
     <footer>
         <p>Made with ❤️ for your polling needs</p>
