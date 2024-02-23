@@ -70,41 +70,8 @@ document.getElementById('pollForm').addEventListener('submit', function(event) {
     })
     .then(function() {
         console.log("Document written with ID: ", id);
-
-        // Generate new HTML content
-        let newHtmlContent = `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <title>Poll ${id}</title>
-            </head>
-            <body>
-                <h1>${question}</h1>
-                ${options.map(option => `<p>${option}</p>`).join('')}
-            </body>
-            </html>
-        `;
-
-        // Create a new Blob object using the new HTML content
-        let blob = new Blob([newHtmlContent], {type: 'text/html'});
-
-        // Create a link element
-        let downloadLink = document.createElement('a');
-
-        // Set the download attribute of the link element to the ID of the poll
-        downloadLink.download = id;
-
-        // Set the href attribute of the link element to a URL created from the Blob object
-        downloadLink.href = URL.createObjectURL(blob);
-
-        // Append the link element to the body
-        document.body.appendChild(downloadLink);
-
-        // Simulate a click on the link element to start the download
-        downloadLink.click();
-
-        // Remove the link element from the body
-        document.body.removeChild(downloadLink);
+        // Redirect to the new form
+        window.location.href = `http://localhost:3000/form/${id}`;
     })
     .catch(function(error) {
         console.error("Error adding document: ", error);
