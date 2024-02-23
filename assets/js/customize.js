@@ -72,7 +72,9 @@ document.getElementById('pollForm').addEventListener('submit', function(event) {
         console.log("Document written with ID: ", id);
         // Redirect to the new form
         // http://localhost:3000/form/
-        window.location.assign(`/form/${id}`);
+        // window.location.assign(`${window.location.origin}/form/${id}`);
+        let serverAddress = 'http://localhost:3000'; // Update this to your server address
+        window.location.assign(`${serverAddress}/form/${id}`);
     })
     .catch(function(error) {
         console.error("Error adding document: ", error);
