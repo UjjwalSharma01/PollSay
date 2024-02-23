@@ -71,7 +71,8 @@ document.getElementById('pollForm').addEventListener('submit', function(event) {
     .then(function() {
         console.log("Document written with ID: ", id);
         // Redirect to the new form
-        window.location.href = `http://localhost:3000/form/${id}`;
+        // http://localhost:3000/form/
+        window.location.assign(`/form/${id}`);
     })
     .catch(function(error) {
         console.error("Error adding document: ", error);

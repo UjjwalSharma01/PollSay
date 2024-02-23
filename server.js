@@ -74,7 +74,6 @@ app.get('/form/:id', async (req, res) => {
             </body>
             </html>
         `;
-
         res.send(htmlContent);
     }
 });
