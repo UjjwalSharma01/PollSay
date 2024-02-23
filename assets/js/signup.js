@@ -3,6 +3,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebas
 import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-analytics.js";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Your web app's Firebase configuration
 const firebaseConfig = {
@@ -97,4 +98,33 @@ document.getElementById('forgot-password').addEventListener('click', (event) => 
     } else {
         alert('Please enter your email.');
     }
+});
+
+
+// Sign in using google
+// Create a new instance of GoogleAuthProvider
+const provider = new GoogleAuthProvider();
+
+document.getElementById('google-login').addEventListener('click', (event) => {
+    event.preventDefault();
+
+    const provider = new GoogleAuthProvider();
+    signInWithPopup(auth, provider)
+        .then((result) => {
+            // The signed-in user info
+            const user = result.user;
+            console.log('User signed in:', user);
+            alert('Logged in successfully');
+
+            // Ask the user if they want to create a form
+            if (confirm('Do you want to create a form?')) {
+                // If they confirm, redirect to form.html
+                window.location.href = 'customize.html';
+            } else {
+                window.location.href = 'customize.html';
+            }
+        }).catch((error) => {
+            // Handle errors
+            console.error('Error signing in:', error);
+        });
 });

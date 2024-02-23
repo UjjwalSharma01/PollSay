@@ -58,25 +58,53 @@ document.getElementById('pollForm').addEventListener('submit', function(event) {
     let requireUniqueID = document.getElementById('requireUniqueID').checked;
     let requireCaptcha = document.getElementById('requireCaptcha').checked;
 
-    // Add a new document with the generated ID
-    db.collection("forms").doc(id).set({
-        question: question,
-        options: options,
-        timeStart: firebase.firestore.Timestamp.fromDate(new Date(timeStart)),
-        timeEnd: firebase.firestore.Timestamp.fromDate(new Date(timeEnd)),
-        maxChoices: Number(maxChoices),
-        requireUniqueID: requireUniqueID,
-        requireCaptcha: requireCaptcha
-    })
-    .then(function() {
-        console.log("Document written with ID: ", id);
-        // Redirect to the new form
-        // http://localhost:3000/form/
-        // window.location.assign(`${window.location.origin}/form/${id}`);
-        let serverAddress = 'http://localhost:3000'; // Update this to your server address
-        window.location.assign(`${serverAddress}/form/${id}`);
-    })
-    .catch(function(error) {
-        console.error("Error adding document: ", error);
+    // Get the current user
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            // User is signed in.
+            var uid = user.uid;
+            var email = user.email; // Get the user's email
+
+            // Add a new document with the generated ID
+            db.collection("forms").doc(id).set({
+                question: question,
+                options: options,
+                createdBy: uid,
+                createdByEmail: email, // Save the user's email
+                timeStart: firebase.firestore.Timestamp.fromDate(new Date(timeStart)),
+                timeEnd: firebase.firestore.Timestamp.fromDate(new Date(timeEnd)),
+                maxChoices: Number(maxChoices),
+                requireUniqueID: requireUniqueID,
+                requireCaptcha: requireCaptcha
+            })
+            .then(function() {
+                console.log("Document written with ID: ", id);
+                // Redirect to the new form
+                let serverAddress = 'http://localhost:3000'; // Update this to your server address
+                window.location.assign(`${serverAddress}/form/${id}`);
+            })
+            .catch(function(error) {
+                console.error("Error adding document: ", error);
+            });
+        } else {
+            // No user is signed in.
+            // ...
+        }
     });
 });
+
+function deleteAllForms() {
+    db.collection('forms').get().then((snapshot) => {
+        snapshot.forEach((doc) => {
+            db.collection('forms').doc(doc.id).delete().then(() => {
+                console.log("Document successfully deleted!");
+            }).catch((error) => {
+                console.error("Error removing document: ", error);
+            });
+        });
+    }).catch((error) => {
+        console.log("Error getting documents: ", error);
+    });
+}
+// Never call this function --> made to clear the database rather than doing it manually
+// deleteAllForms();
