@@ -11,30 +11,100 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 
+// Initialize option counter
+let optionCounter = 1;
+
+document.getElementById('addOption').addEventListener('click', function() {
+    var optionsContainer = document.getElementById('optionsContainer');
+    
+    // Create new label
+    var newLabel = document.createElement('label');
+    newLabel.textContent = "Enter Poll Option " + (++optionCounter) + ":";
+    optionsContainer.appendChild(newLabel);
+    
+    // Create new input
+    var newOption = document.createElement('input');
+    newOption.type = 'text';
+    newOption.name = 'options';
+    newOption.required = true;
+    optionsContainer.appendChild(newOption);
+    
+    // Create line break
+    var lineBreak = document.createElement('br');
+    optionsContainer.appendChild(lineBreak);
+});
+
+// Function to generate a random ID
+function generateRandomId(length = 10) {
+    let result = '';
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length));
+    }
+    return result;
+}
 
 document.getElementById('pollForm').addEventListener('submit', function(event) {
     event.preventDefault();
 
+    // Generate a random ID
+    let id = generateRandomId();
+
     let question = document.getElementById('question').value;
-    let options = document.getElementById('options').value.split(',');
+    let options = Array.from(document.getElementsByName('options')).map(option => option.value);
     let timeStart = document.getElementById('timeStart').value;
     let timeEnd = document.getElementById('timeEnd').value;
     let maxChoices = document.getElementById('maxChoices').value;
     let requireUniqueID = document.getElementById('requireUniqueID').checked;
     let requireCaptcha = document.getElementById('requireCaptcha').checked;
 
-    // Add a new document with a generated ID
-    db.collection("forms").add({
+    // Add a new document with the generated ID
+    db.collection("forms").doc(id).set({
         question: question,
         options: options,
-        timeStart: timeStart,
-        timeEnd: timeEnd,
-        maxChoices: maxChoices,
+        timeStart: firebase.firestore.Timestamp.fromDate(new Date(timeStart)),
+        timeEnd: firebase.firestore.Timestamp.fromDate(new Date(timeEnd)),
+        maxChoices: Number(maxChoices),
         requireUniqueID: requireUniqueID,
         requireCaptcha: requireCaptcha
     })
-    .then(function(docRef) {
-        console.log("Document written with ID: ", docRef.id);
+    .then(function() {
+        console.log("Document written with ID: ", id);
+
+        // Generate new HTML content
+        let newHtmlContent = `
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Poll ${id}</title>
+            </head>
+            <body>
+                <h1>${question}</h1>
+                ${options.map(option => `<p>${option}</p>`).join('')}
+            </body>
+            </html>
+        `;
+
+        // Create a new Blob object using the new HTML content
+        let blob = new Blob([newHtmlContent], {type: 'text/html'});
+
+        // Create a link element
+        let downloadLink = document.createElement('a');
+
+        // Set the download attribute of the link element to the ID of the poll
+        downloadLink.download = id;
+
+        // Set the href attribute of the link element to a URL created from the Blob object
+        downloadLink.href = URL.createObjectURL(blob);
+
+        // Append the link element to the body
+        document.body.appendChild(downloadLink);
+
+        // Simulate a click on the link element to start the download
+        downloadLink.click();
+
+        // Remove the link element from the body
+        document.body.removeChild(downloadLink);
     })
     .catch(function(error) {
         console.error("Error adding document: ", error);

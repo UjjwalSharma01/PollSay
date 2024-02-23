@@ -56,7 +56,17 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
             const user = userCredential.user;
             console.log('User logged in:', user);
             alert('Logged in successfully');
-            window.location.href = 'customize.html';
+
+            // Ask the user if they want to create a form
+            if (confirm('Do you want to create a form?')) {
+                // If they confirm, redirect to form.html
+                window.location.href = 'customize.html';
+            } 
+            
+            // sochege
+            // else {
+            //     window.location.href = 'customize.html';
+            // }
         })
         .catch((error) => {
             // There was an error logging in the user
