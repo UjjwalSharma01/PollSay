@@ -6,15 +6,16 @@ import { sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.
 import { GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
 
 // Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyAxr-SPca9kxklClFxHYkYn0h4HOaX49Mo",
-    authDomain: "hackathon-d9723.firebaseapp.com",
-    projectId: "hackathon-d9723",
-    storageBucket: "hackathon-d9723.appspot.com",
-    messagingSenderId: "885132274630",
-    appId: "1:885132274630:web:e0ec9087076c703235a0c7",
-    measurementId: "G-BHPSWF6M12"
-};
+    apiKey: "AIzaSyD1E7L8HTG4pz9YwU-uH0Ukc1OAMmSiBXA",
+    authDomain: "pollsay.firebaseapp.com",
+    projectId: "pollsay",
+    storageBucket: "pollsay.appspot.com",
+    messagingSenderId: "512729911469",
+    appId: "1:512729911469:web:f7b74a38449401dd767624",
+    measurementId: "G-X6DY3KMLWK"
+  };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
@@ -63,16 +64,15 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
                 // If they confirm, redirect to form.html
                 window.location.href = 'customize.html';
             } 
-            
-            // sochege
-            // else {
-            //     window.location.href = 'customize.html';
-            // }
         })
         .catch((error) => {
             // There was an error logging in the user
             if (error.code === 'auth/user-not-found') {
-                alert('Please signup first');
+                alert('No user found with this email. Please signup first.');
+            } else if (error.code === 'auth/wrong-password') {
+                alert('Incorrect password. Please try again.');
+            } else if (error.code === 'auth/invalid-credential') {
+                alert('Invalid credentials. Please check your email and password.');
             } else {
                 console.error('Error logging in:', error);
             }
@@ -128,3 +128,32 @@ document.getElementById('google-login').addEventListener('click', (event) => {
             console.error('Error signing in:', error);
         });
 });
+
+
+
+// -------------------------DANGER ZONE -------------------------
+const admin = require('firebase-admin');
+
+admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+    databaseURL: 'https://pollsay.firebaseio.com'
+});
+
+function deleteAllUsers(nextPageToken) {
+    // List batch of users, 1000 at a time.
+    admin.auth().listUsers(1000, nextPageToken)
+        .then((listUsersResult) => {
+            listUsersResult.users.forEach((userRecord) => {
+                admin.auth().deleteUser(userRecord.uid);
+            });
+            if (listUsersResult.pageToken) {
+                // List next batch of users.
+                deleteAllUsers(listUsersResult.pageToken)
+            }
+        })
+        .catch((error) => {
+            console.log('Error listing users:', error);
+        });
+}
+// Start listing users from the beginning, 1000 at a time.
+// deleteAllUsers();

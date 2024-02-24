@@ -6,7 +6,7 @@ const port = 3000;
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK with service account
-var serviceAccount = require("./hackathon-d9723-firebase-adminsdk-vl1a6-68df52b0dd.json");
+var serviceAccount = require("./pollsay-firebase-adminsdk-bc7wa-1b34666e52.json");
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
