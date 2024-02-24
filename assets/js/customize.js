@@ -90,6 +90,7 @@ document.getElementById('pollForm').addEventListener('submit', function(event) {
         } else {
             // No user is signed in.
             // ...
+            console.log("No user signed in");
         }
     });
 });

@@ -1,6 +1,3 @@
-
-
-
 let acceptSubmission = false;
 let otp = null;
 function sendOTP(enteredEmail) {
@@ -47,11 +44,34 @@ sendOtpButton.addEventListener('click', function () {
     }
 });
 
+let submitButton2 = document.getElementById("submitButton2");
+let poleCode = document.getElementById('poleCode');
+let poleCodeInput = null;
+
+submitButton2.addEventListener("click", function() {
+    poleCodeInput = poleCode.value;
+    let serverAddress = 'http://localhost:3000'; // Update this to your server address
+    let url = `${serverAddress}/form/${poleCodeInput}`;
+    window.open(url, '_blank');
+});
+
 submitButton.addEventListener('click', () => {
     if (acceptSubmission) {
         if(otp == document.getElementById('otp').value){
             alert('OTP Verified');
             // Display poll question code...
+            submitButton2.style.display = 'block';
+            poleCode.style.display = 'block';
+
+            let x = document.getElementById('user-auth');
+            x.querySelectorAll('*').forEach(element => {
+                if (element.id !== 'poleCode' && element.id !== 'submitButton2') {
+                    element.style.display = 'none';
+                }
+                else{
+                    //...
+                }
+            });
         }
         else{
             alert('Invalid OTP');
@@ -61,4 +81,7 @@ submitButton.addEventListener('click', () => {
         alert('OTP Expired or Invalid');
     }
 });
+
+
+
 
