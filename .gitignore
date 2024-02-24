@@ -2,3 +2,4 @@
 sendgrid.env
 sendgrid.env
 /*.code-workspace
+/node_modules/
