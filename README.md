@@ -37,10 +37,6 @@ Future enhancements may include:
 - Additional security measures, such as captcha verification and unique identifiers for voters.
 - Dynamic addition of poll options for increased flexibility.
 
-## Contributing
-
-We welcome contributions to PollSay! If you'd like to contribute, feel free to fork the repository, make your changes, and then submit a pull request.
-
 ## Contact
 
 If you have any questions or feedback, please feel free to contact us. We'd love to hear from you!
