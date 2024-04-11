@@ -1,14 +1,18 @@
 // Initialize firebase
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// Import the functions you need from the SDKs you need
 const firebaseConfig = {
-    apiKey: "AIzaSyD1E7L8HTG4pz9YwU-uH0Ukc1OAMmSiBXA",
-    authDomain: "pollsay.firebaseapp.com",
-    projectId: "pollsay",
-    storageBucket: "pollsay.appspot.com",
-    messagingSenderId: "512729911469",
-    appId: "1:512729911469:web:f7b74a38449401dd767624",
-    measurementId: "G-X6DY3KMLWK"
-  };
+  apiKey: "AIzaSyAxr-SPca9kxklClFxHYkYn0h4HOaX49Mo",
+  authDomain: "hackathon-d9723.firebaseapp.com",
+  projectId: "hackathon-d9723",
+  storageBucket: "hackathon-d9723.appspot.com",
+  messagingSenderId: "885132274630",
+  appId: "1:885132274630:web:e0ec9087076c703235a0c7",
+  measurementId: "G-BHPSWF6M12"
+};
+
+// Initialize Firebase
+
 firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 

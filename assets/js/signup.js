@@ -35,6 +35,9 @@ document.getElementById('signup-form').addEventListener('submit', (event) => {
             const user = userCredential.user;
             console.log('User signed up:', user);
             alert('Signup successful, please login');
+
+            // Store the user's email in local storage
+            localStorage.setItem("userEmail", user.email);
         })
         .catch((error) => {
             // There was an error signing up the user
@@ -45,6 +48,7 @@ document.getElementById('signup-form').addEventListener('submit', (event) => {
             }
         });
 });
+
 // Login
 document.getElementById('login-form').addEventListener('submit', (event) => {
     event.preventDefault();
@@ -58,6 +62,9 @@ document.getElementById('login-form').addEventListener('submit', (event) => {
             const user = userCredential.user;
             console.log('User logged in:', user);
             alert('Logged in successfully');
+
+            // Store the user's email in local storage
+            localStorage.setItem("userEmail", user.email);
 
             // Ask the user if they want to create a form
             if (confirm('Do you want to create a form?')) {
@@ -121,7 +128,7 @@ document.getElementById('google-login').addEventListener('click', (event) => {
                 // If they confirm, redirect to form.html
                 window.location.href = 'customize.html';
             } else {
-                window.location.href = 'customize.html';
+                alert("You're logged in as " + user.displayName);
             }
         }).catch((error) => {
             // Handle errors

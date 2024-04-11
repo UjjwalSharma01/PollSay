@@ -6,7 +6,7 @@ const port = 3000;
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK with service account
-var serviceAccount = require("./pollsay-firebase-adminsdk-bc7wa-1b34666e52.json");
+var serviceAccount = require("./hackathon-d9723-firebase-adminsdk-vl1a6-5a17b5f0bb.json");
 admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
@@ -162,6 +162,7 @@ app.get('/form/:id', async (req, res) => {
 app.post('/submit/:id', express.urlencoded({ extended: true }), async (req, res) => {
     let formId = req.params.id;
     let selectedOption = req.body.option;
+    let userEmail = req.body.userEmail; // Get the user's email from the request body
 
     // Save the selected option to Firestore
     let docRef = db.collection('forms').doc(formId);
@@ -177,13 +178,38 @@ app.post('/submit/:id', express.urlencoded({ extended: true }), async (req, res)
         if (!data.responses[selectedOption]) {
             data.responses[selectedOption] = 0;
         }
+
+        // Check if the unique user constraint is enabled
+        if (data.constraints && data.constraints.requireUniqueID) {
+            // If the unique user constraint is enabled, check if the user has already voted
+            if (data.voters && data.voters.includes(userEmail)) {
+                // If the user has already voted, send an error response
+                res.status(400).send('You have already voted.');
+                return;
+            } else {
+                // If the user hasn't voted yet, add their email to the voters list
+                if (!data.voters) {
+                    data.voters = [];
+                }
+                data.voters.push(userEmail);
+            }
+        }
+
+        // Increment the count for the selected option
         data.responses[selectedOption]++;
-        await docRef.set(data);
-        // res.send('Thank you for your submission!');
-        res.redirect('/thankyou.html');
+
+        // Save the updated form data to Firestore
+        await docRef.set(data, { merge: true });
+
+        // Send a success response
+        res.send('Thank you for your submission!');
     }
 });
 
 app.listen(port, () => {
-    console.log(`Server running at http://localhost:${port}/`);
+    console.log(`Server is running on port ${port}`);
 });
+
+
+
+// form => code B9Fyv0fAJg
