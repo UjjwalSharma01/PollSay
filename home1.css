@@ -1,0 +1,214 @@
+/* Base Styles */
+* {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;     /* Firefox */
+  }
+  
+  /* Webkit browsers like Chrome, Safari, newer Edge */
+  *::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+  
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 0px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }
+  
+  /* Remove tap highlight on mobile */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Improve text rendering */
+  body {
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Focus outline styles */
+  :focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  
+  @keyframes fadeOut {
+    0% { opacity: 1; }
+    100% { opacity: 0; }
+  }
+  
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes slideDown {
+    0% { transform: translateY(-20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  
+  @keyframes slideLeft {
+    0% { transform: translateX(20px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes slideRight {
+    0% { transform: translateX(-20px); opacity: 0; }
+    100% { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes scaleIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes scaleOut {
+    0% { transform: scale(1.1); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  @keyframes grow {
+    from { height: 0; }
+    to { height: var(--target-height); }
+  }
+  
+  /* Animation Classes */
+  .animate-grow {
+    animation: grow 1.5s ease-out forwards;
+    --target-height: var(--h);
+  }
+  
+  .animate-fade-in {
+    animation: fadeIn 0.5s ease-in;
+  }
+  
+  .animate-fade-out {
+    animation: fadeOut 0.5s ease-out;
+  }
+  
+  .animate-slide-up {
+    animation: slideUp 0.5s ease-out;
+  }
+  
+  .animate-slide-down {
+    animation: slideDown 0.5s ease-out;
+  }
+  
+  .animate-slide-left {
+    animation: slideLeft 0.5s ease-out;
+  }
+  
+  .animate-slide-right {
+    animation: slideRight 0.5s ease-out;
+  }
+  
+  .animate-scale-in {
+    animation: scaleIn 0.5s ease-out;
+  }
+  
+  .animate-scale-out {
+    animation: scaleOut 0.5s ease-out;
+  }
+  
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+  
+  /* Print styles */
+  @media print {
+    .no-print {
+      display: none !important;
+    }
+    
+    a[href]:after {
+      content: " (" attr(href) ")";
+    }
+  }
+  
+  /* Floating interface animation */
+  .floating-interface {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  /* Integration cards hover effect */
+  .integration-card:hover {
+    transform: translateX(-0.5rem);
+    border-color: rgba(124, 77, 255, 0.3);
+  }
+  
+  /* Pricing card hover effect */
+  .pricing-card:hover {
+    transform: translateY(-0.5rem);
+    box-shadow: 0 20px 25px -5px rgba(124, 77, 255, 0.1), 0 10px 10px -5px rgba(124, 77, 255, 0.04);
+  }
+  
+  /* Testimonial card hover effect */
+  .testimonial-card:hover {
+    border-color: rgba(124, 77, 255, 0.3);
+    transform: translateY(-0.25rem);
+  }
+  
+  /* Contact form input focus styles */
+  .contact-input:focus {
+    border-color: #7C4DFF;
+    box-shadow: 0 0 0 2px rgba(124, 77, 255, 0.2);
+  }
+  
+  /* Social media icons hover effect */
+  .social-icon:hover {
+    background-color: rgba(124, 77, 255, 0.1);
+    color: #7C4DFF;
+  }
+  
+  /* Navigation link hover effect */
+  .nav-link:hover {
+    color: #7C4DFF;
+  }
+  
+  /* Button hover effects */
+  .btn-primary:hover {
+    background-image: linear-gradient(to right, #00B8D4, #7C4DFF);
+    transform: translateY(-1px);
+  }
+  
+  .btn-secondary:hover {
+    background-color: rgba(124, 77, 255, 0.1);
+  }
+  
+  /* Mobile menu transition */
+  #mobile-menu {
+    transition: all 0.3s ease-in-out;
+  }
+  
+  /* Navbar scroll effect */
+  .navbar-scrolled {
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(124, 77, 255, 0.1);
+  }
