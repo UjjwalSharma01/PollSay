@@ -1,61 +1,1135 @@
 <!DOCTYPE html>
-<html lang="en">
-
+<html lang="en" class="scroll-smooth">
 <head>
+    <!-- Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PollSay</title>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Add favicon -->
-    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon> -->
-    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="description" content="AI-generated website">
+    <meta name="theme-color" content="#ffffff">
+    <meta name="robots" content="index, follow">
+    
+    <!-- Preload Critical Resources -->
+    <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" as="style">
+    
+    <!-- Font Preconnects -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    
+    <!-- Core Styles -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Third-Party Libraries -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/particles.js/2.0.0/particles.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+    
+    <!-- Swiper JS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    
+    <!-- Local Styles -->
+    <link rel="stylesheet" href="CSS/homePage/styles.css">
+    <link rel="stylesheet" href="CSS/homePage/features.css">
+    <link rel="stylesheet" href="CSS/homePage/testimonials.css">
+    <link rel="stylesheet" href="CSS/homePage/pricing.css">
+    <link rel="stylesheet" href="CSS/homePage/contactMe.css">
+    <link rel="stylesheet" href="CSS/homePage/footer.css">
+    <title>PollSay - Enterprise Polling Platform</title>
 </head>
+<body class="antialiased text-gray-800 min-h-screen flex flex-col bg-neutral-900">
+    <!-- Navigation -->
+    <nav id="navbar" class="fixed w-full z-50 bg-neutral-900/90 backdrop-blur-lg border-b border-neutral-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <!-- Logo -->
+                <div class="flex-shrink-0 flex items-center">
+                    <span class="text-2xl font-bold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">PollSay</span>
+                </div>
 
-<body>
-    <div id="particles-js"></div>
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#hero" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Home</a>
+                    <a href="#features" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Features</a>
+                    <a href="#security" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Security</a>
+                    <a href="#analytics" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Analytics</a>
+                    <a href="#testimonials" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Testimonials</a>
+                    <a href="#pricing" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Pricing</a>
+                    <a href="#integration" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Integration</a>
+                    <a href="#contact" class="text-neutral-300 hover:text-[#7C4DFF] transition-colors">Contact</a>
+                </div>
 
-    <nav>
-        <div>
-            <img src="./assets/images/Logo - PollSay.svg" alt="Website Logo">
+                <!-- Mobile menu button -->
+                <div class="md:hidden flex items-center">
+                    <button id="mobile-menu-button" class="text-neutral-300 hover:text-[#7C4DFF] focus:outline-none">
+                        <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
         </div>
-        <div>
-            <p>POLLSAY</p>
-        </div>
-        <div>
-            <a href="signup.html" class="signup-button">Signup/Login</a>
+
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="hidden md:hidden bg-neutral-900 border-t border-neutral-800">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="#hero" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Home</a>
+                <a href="#features" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Features</a>
+                <a href="#security" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Security</a>
+                <a href="#analytics" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Analytics</a>
+                <a href="#testimonials" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Testimonials</a>
+                <a href="#pricing" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Pricing</a>
+                <a href="#integration" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Integration</a>
+                <a href="#contact" class="block px-3 py-2 text-neutral-300 hover:text-[#7C4DFF] transition-colors">Contact</a>
+            </div>
         </div>
     </nav>
-    <div id="hero" class="hero">
-        <section class="user-authentication">
-            <form id="user-auth">
-                <input type="email" id="email" placeholder="Enter mail (try 00617702722_cse@vips.edu)" required>
-                <button id="sendOtpButton" type="button">Send OTP</button>
-                <input type="text" id="otp" placeholder="Enter OTP" required>
-                <input type="poleCode" id="poleCode" placeholder="Enter pole code (Try : 1cmcS3MP3G)" required>
-                <button id="submitButton" type="submit">Submit</button>
-                <button id="submitButton2" type="submit">Submit Code</button>
-            </form>
-        </section>
+
+    <!-- Hero Section -->
+    <section id="hero" class="min-h-[70vh] relative flex items-center overflow-hidden bg-gradient-to-b from-neutral-900 via-neutral-900 to-neutral-800">
+        <!-- Particle background -->
+        <div id="particles-js" class="absolute inset-0"></div>
+
+        <!-- Gradient mesh overlay -->
+        <div class="absolute inset-0 bg-gradient-to-br from-[#7C4DFF]/10 to-[#00B8D4]/10"></div>
+
+        <div class="container mx-auto px-4 relative z-10 pt-20">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <!-- Text Content -->
+                <div class="text-left animate__animated animate__fadeInUp">
+                    <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-6 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">
+                        Enterprise Polling Platform
+                    </h1>
+                    <p class="text-neutral-300 text-lg md:text-xl mb-8 leading-relaxed">
+                        Transform your decision-making process with secure, real-time polling solutions designed for enterprise.
+                    </p>
+                    <div class="flex flex-wrap gap-4">
+                        <button class="px-8 py-3 rounded-lg text-white font-semibold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] hover:from-[#00B8D4] hover:to-[#7C4DFF] transition-all duration-300 transform hover:-translate-y-1">
+                            Get Started
+                        </button>
+                        <button class="px-8 py-3 rounded-lg text-white font-semibold border border-[#7C4DFF] hover:bg-[#7C4DFF]/10 transition-all duration-300">
+                            Watch Demo
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 3D Interface -->
+                <div class="relative animate__animated animate__fadeInRight">
+                    <div class="floating-interface p-6 bg-neutral-800/80 backdrop-blur-xl rounded-2xl border border-neutral-700 shadow-[0_0_20px_rgba(124,77,255,0.3)]">
+                        <div class="poll-header mb-4">
+                            <div class="h-3 w-24 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] rounded-full mb-2"></div>
+                            <div class="h-2 w-16 bg-neutral-600 rounded-full"></div>
+                        </div>
+                        <div class="poll-options space-y-4">
+                            <div class="h-10 bg-neutral-700/50 rounded-lg w-full"></div>
+                            <div class="h-10 bg-neutral-700/50 rounded-lg w-full"></div>
+                            <div class="h-10 bg-neutral-700/50 rounded-lg w-full"></div>
+                        </div>
+                        <div class="poll-footer mt-4">
+                            <div class="h-2 w-32 bg-neutral-600 rounded-full"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Logos -->
+          <!-- Enterprise Logos -->
+<div class="mt-16 animate__animated animate__fadeInUp">
+    <p class="text-neutral-400 text-center mb-6">Trusted by leading enterprises</p>
+    <div class="flex justify-center items-center flex-wrap gap-8">
+        <!-- Existing placeholder divs -->
+    </div>
+</div>
+
+    </section>
+
+    <!-- Required Scripts -->
+    <script>
+        // Mobile menu functionality
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+            mobileMenu.classList.toggle('hidden');
+        });
+
+        // Close mobile menu when clicking on a link
+        const mobileLinks = mobileMenu.getElementsByTagName('a');
+        for(let link of mobileLinks) {
+            link.addEventListener('click', () => {
+                mobileMenu.classList.add('hidden');
+            });
+        }
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!mobileMenu.contains(e.target) && !mobileMenuButton.contains(e.target)) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+
+        // Navbar scroll effect
+        window.addEventListener('scroll', () => {
+            const navbar = document.getElementById('navbar');
+            if (window.scrollY > 0) {
+                navbar.classList.add('shadow-lg');
+            } else {
+                navbar.classList.remove('shadow-lg');
+            }
+        });
+
+        // Initialize particles.js
+        particlesJS('particles-js', {
+            particles: {
+                number: { value: 80, density: { enable: true, value_area: 800 } },
+                color: { value: ["#7C4DFF", "#B388FF", "#00B8D4"] },
+                shape: { type: "circle" },
+                opacity: { value: 0.5, random: false },
+                size: { value: 3, random: true },
+                line_linked: {
+                    enable: true,
+                    distance: 150,
+                    color: "#7C4DFF",
+                    opacity: 0.2,
+                    width: 1
+                },
+                move: {
+                    enable: true,
+                    speed: 2,
+                    direction: "none",
+                    random: false,
+                    straight: false,
+                    out_mode: "out",
+                    bounce: false
+                }
+            },
+            interactivity: {
+                detect_on: "canvas",
+                events: {
+                    onhover: { enable: true, mode: "grab" },
+                    resize: true
+                }
+            },
+            retina_detect: true
+        });
+    </script>
+
+    <style>
+        /* Floating animation for interface */
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0) rotateX(0);
+                box-shadow: 0 20px 30px rgba(124, 77, 255, 0.2);
+            }
+            50% { 
+                transform: translateY(-20px) rotateX(5deg);
+                box-shadow: 0 30px 40px rgba(124, 77, 255, 0.3);
+            }
+        }
+
+        .floating-interface {
+            animation: float 6s ease-in-out infinite;
+        }
+
+        /* Fade in animations */
+        .animate__animated {
+            animation-duration: 1s;
+            animation-fill-mode: both;
+        }
+
+        .animate__fadeInUp {
+            animation-name: fadeInUp;
+        }
+
+        .animate__fadeInRight {
+            animation-name: fadeInRight;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translate3d(0, 40px, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+
+        @keyframes fadeInRight {
+            from {
+                opacity: 0;
+                transform: translate3d(40px, 0, 0);
+            }
+            to {
+                opacity: 1;
+                transform: translate3d(0, 0, 0);
+            }
+        }
+    </style>
+    <!-- Features Section -->
+    <section id="features" class="py-20 bg-neutral-800 relative overflow-hidden">
+        <!-- Diagonal background divider -->
+        <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 to-neutral-800 transform -skew-y-6"></div>
+
+        <div class="container mx-auto px-4 relative z-10">
+            <!-- Section Header -->
+            <div class="text-center mb-16 animate__animated animate__fadeIn">
+                <h2 class="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">
+                    Enterprise-Grade Features
+                </h2>
+                <p class="text-neutral-300 text-lg max-w-2xl mx-auto">
+                    Powerful tools designed for enterprise-scale polling and decision making
+                </p>
+            </div>
+
+            <!-- Features Grid -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <!-- Feature Card 1 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Enterprise Security</h3>
+                    <p class="text-neutral-300">End-to-end encryption and advanced authentication protocols for secure polling.</p>
+                </div>
+
+                <!-- Feature Card 2 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Real-time Analytics</h3>
+                    <p class="text-neutral-300">Comprehensive analytics dashboard with real-time data visualization.</p>
+                </div>
+
+                <!-- Feature Card 3 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 14v6m-3-3h6M6 10h2a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2zm10 0h2a2 2 0 002-2V6a2 2 0 00-2-2h-2a2 2 0 00-2 2v2a2 2 0 002 2zM6 20h2a2 2 0 002-2v-2a2 2 0 00-2-2H6a2 2 0 00-2 2v2a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">API Integration</h3>
+                    <p class="text-neutral-300">Seamless integration with existing enterprise systems and workflows.</p>
+                </div>
+
+                <!-- Feature Card 4 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Real-time Results</h3>
+                    <p class="text-neutral-300">Instant polling results with live updates and data synchronization.</p>
+                </div>
+
+                <!-- Feature Card 5 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">Custom Templates</h3>
+                    <p class="text-neutral-300">Customizable polling templates for different use cases and scenarios.</p>
+                </div>
+
+                <!-- Feature Card 6 -->
+                <div class="feature-card group p-6 rounded-xl backdrop-blur-xl bg-neutral-800/60 border border-neutral-700 hover:border-[#7C4DFF]/30 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
+                    <div class="w-12 h-12 mb-6 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] flex items-center justify-center">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
+                        </svg>
+                    </div>
+                    <h3 class="text-xl font-semibold text-white mb-3">User Management</h3>
+                    <p class="text-neutral-300">Advanced user roles and permissions for enterprise-wide deployment.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Additional Styles for Features Section -->
+   
+
+<!-- Fix -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<section id="security" class="py-20 bg-neutral-900 relative overflow-hidden">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 opacity-10">
+        <div class="absolute top-20 left-20 w-72 h-72 bg-[#7C4DFF] rounded-full filter blur-[128px]"></div>
+        <div class="absolute bottom-20 right-20 w-72 h-72 bg-[#00B8D4] rounded-full filter blur-[128px]"></div>
     </div>
 
-    <!-- <button onclick="window.location.href='customize.html'">Go to Customize</button> -->
+    <div class="container mx-auto px-4">
+        <!-- Main Content Grid -->
+        <div class="flex flex-col md:flex-row gap-12">
+            <!-- Left Column - Features -->
+            <div class="md:w-1/2 animate__animated animate__fadeInLeft">
+                <h2 class="text-4xl font-bold mb-12 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">
+                    Enterprise-Grade Security
+                </h2>
 
-    <footer>
-        <p>Made with ❤️ for your polling needs</p>
-    </footer>
-    <!-- scripts -->
-    <script src="https://smtpjs.com/v3/smtp.js"></script>
+                <!-- Feature Items -->
+                <div class="space-y-8 mb-8">
+                    <!-- End-to-End Encryption -->
+                    <div class="flex items-start space-x-6">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">End-to-End Encryption</h3>
+                            <p class="text-neutral-400">Military-grade encryption ensures your polling data remains secure and private.</p>
+                        </div>
+                    </div>
 
-    <!-- particle.js links -->
-    <script src="./assets/js/particles.min.js"></script>
-    <script src="./assets/js/app.js"></script>
+                    <!-- Advanced Authentication -->
+                    <div class="flex items-start space-x-6">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Advanced Authentication</h3>
+                            <p class="text-neutral-400">Multi-factor authentication and SSO integration for secure access control.</p>
+                        </div>
+                    </div>
 
-    <!-- firebase things -->
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
-    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+                    <!-- Audit Logging -->
+                    <div class="flex items-start space-x-6">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Audit Logging</h3>
+                            <p class="text-neutral-400">Comprehensive audit trails and activity monitoring for compliance.</p>
+                        </div>
+                    </div>
+                </div>
 
-    <!-- Script included -->
-    <script type="module" src="script.js"></script>
+                <button class="mt-8 px-8 py-3 rounded-lg text-white font-semibold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] hover:from-[#00B8D4] hover:to-[#7C4DFF] transition-all duration-300 transform hover:-translate-y-1 hover:shadow-lg hover:shadow-[#7C4DFF]/20">
+                    Learn More About Security
+                </button>
+            </div>
+
+            <!-- Right Column - Security Status -->
+            <!-- <div class="md:w-1/2 animate__animated animate__fadeInRight min-h-[500px] "> -->
+            <!-- Right Column - Security Status -->
+            <div class="md:w-1/2 animate__animated animate__fadeInRight min-h-[200px] mt-16">
+            
+                <div class="relative">
+                    <!-- Gradient background blur -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-[#7C4DFF]/10 via-[#9C27B0]/10 to-[#00B8D4]/10 rounded-2xl filter blur-3xl"></div>
+                    
+                    <!-- Main container -->
+                    <div class="relative bg-neutral-800/60 backdrop-blur-xl rounded-2xl p-8 border border-neutral-700">
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between">
+                                <span class="text-white">Encryption Status</span>
+                                <span class="px-3 py-1 rounded-full text-sm bg-[#00BFA5]/20 text-[#00BFA5]">Active</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white">Firewall Protection</span>
+                                <span class="px-3 py-1 rounded-full text-sm bg-[#00BFA5]/20 text-[#00BFA5]">Enabled</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white">Latest Security Scan</span>
+                                <span class="px-3 py-1 rounded-full text-sm bg-[#00BFA5]/20 text-[#00BFA5]">Passed</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                                <span class="text-white">Data Backup</span>
+                                <span class="px-3 py-1 rounded-full text-sm bg-[#00BFA5]/20 text-[#00BFA5]">Synced</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+
+
+
+
+<section id="analytics" class="py-24 bg-neutral-800 relative overflow-hidden">
+    <!-- Diagonal background divider -->
+    <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 to-neutral-800 transform -skew-y-6"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-16 animate__animated animate__fadeIn">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">
+                Real-Time Analytics Dashboard
+            </h2>
+            <p class="text-neutral-300 text-lg max-w-2xl mx-auto">
+                Powerful insights and data visualization for informed decision-making
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 items-center">
+            <!-- Analytics Dashboard Preview -->
+            <div class="relative animate__animated animate__fadeInLeft">
+                <div class="absolute inset-0 bg-gradient-to-r from-[#7C4DFF]/10 to-[#00B8D4]/10 rounded-2xl filter blur-3xl"></div>
+                <div class="relative bg-neutral-800/50 backdrop-blur-xl p-8 rounded-2xl border border-neutral-700 hover:border-[#7C4DFF]/30 transition-all duration-500">
+                    <!-- Chart Section -->
+                    <div class="space-y-6">
+                        <!-- Bar Chart Mockup -->
+                        <div class="h-48 flex items-end justify-between gap-2 px-4">
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 60%"></div>
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 80%"></div>
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 40%"></div>
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 90%"></div>
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 70%"></div>
+                            <div class="w-1/6 bg-gradient-to-t from-[#7C4DFF] to-[#00B8D4] rounded-t-lg animate-grow" style="height: 50%"></div>
+                        </div>
+
+                        <!-- Stats Grid -->
+                        <div class="grid grid-cols-2 gap-4 mt-8">
+                            <div class="bg-neutral-900/50 p-4 rounded-lg">
+                                <h4 class="text-[#00B8D4] text-sm font-medium">Total Responses</h4>
+                                <p class="text-white text-2xl font-bold">24,521</p>
+                            </div>
+                            <div class="bg-neutral-900/50 p-4 rounded-lg">
+                                <h4 class="text-[#7C4DFF] text-sm font-medium">Engagement Rate</h4>
+                                <p class="text-white text-2xl font-bold">87.5%</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Features List -->
+            <div class="space-y-8 animate__animated animate__fadeInRight">
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                        <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 0 01-2-2z"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Advanced Visualization</h3>
+                        <p class="text-neutral-300">Interactive charts and graphs for deep data analysis</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                        <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Real-time Metrics</h3>
+                        <p class="text-neutral-300">Live updates and instant data processing</p>
+                    </div>
+                </div>
+
+                <div class="flex items-start space-x-4">
+                    <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                        <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/>
+                        </svg>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-semibold text-white mb-2">Data Export</h3>
+                        <p class="text-neutral-300">Export insights in multiple formats for reporting</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+        @keyframes grow {
+            from { height: 0; }
+            to { height: var(--target-height); }
+        }
+        .animate-grow {
+            animation: grow 1.5s ease-out forwards;
+            --target-height: var(--h);
+        }
+    </style>
+</section>
+
+
+
+<!-- testimonials section start -->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</section>
+
+
+
+
+
+
+
+
+
+<!-- Previous styles remain the same -->
+<!-- Security Section Specific Styles -->
+<!-- <style>
+  /* Security Section Styles */
+.security-section {
+    position: relative;
+    overflow: hidden;
+}
+
+/* Container Styles */
+.security-animation-container {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease-in-out;
+    background: rgba(38, 38, 38, 0.6);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    height: 400px;
+    border-radius: 1rem;
+    border: 1px solid rgba(124, 77, 255, 0.1);
+}
+
+/* Status Item Styles */
+.security-status-item {
+    transform: translateX(0);
+    transition: all 0.3s ease-in-out;
+    border: 1px solid rgba(124, 77, 255, 0.1);
+    animation: slideIn 0.5s ease-out forwards;
+    opacity: 0;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.security-status-item:hover {
+    transform: translateX(10px);
+    border-color: rgba(124, 77, 255, 0.3);
+    box-shadow: 0 0 20px rgba(124, 77, 255, 0.1);
+}
+
+/* Security Feature Cards */
+.security-feature-card {
+    transition: all 0.3s ease-in-out;
+}
+
+.security-feature-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(124, 77, 255, 0.1);
+}
+
+/* Security Metrics */
+.security-metric {
+    transition: all 0.3s ease-in-out;
+}
+
+.security-metric:hover {
+    transform: translateY(-5px);
+    border-color: rgba(124, 77, 255, 0.3);
+}
+
+/* Animation Delays */
+.security-status-item:nth-child(1) { animation-delay: 0.1s; }
+.security-status-item:nth-child(2) { animation-delay: 0.2s; }
+.security-status-item:nth-child(3) { animation-delay: 0.3s; }
+.security-status-item:nth-child(4) { animation-delay: 0.4s; }
+
+/* Particles Container */
+#security-particles {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .security-animation-container {
+        height: auto;
+        min-height: 300px;
+        padding: 1.5rem;
+    }
+    
+    .security-status-item {
+        font-size: 0.9rem;
+        max-width: 280px;
+    }
+    
+    .security-feature-card {
+        padding: 1rem;
+    }
+}
+
+/* Gradient Effects */
+.security-gradient-bg {
+    background: linear-gradient(135deg, 
+        rgba(124, 77, 255, 0.1) 0%, 
+        rgba(0, 184, 212, 0.1) 100%
+    );
+}
+
+/* Counter Animation */
+.security-counter {
+    transition: all 0.3s ease-out;
+}
+
+/* Blur Effects */
+.security-blur-backdrop {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
+</style> -->
+
+<!-- Then add the Security Section HTML -->
+<section id="security">
+    <!-- Security section HTML content -->
+</section>
+
+
+<!-- Testimonials -->
+
+
+<!-- testimonials section start -->
+<section class="testimonials-section">
+    <div class="gradient-mesh"></div>
+    
+    <div class="testimonials-container">
+        <div class="section-header">
+            <h2 class="gradient-text">What Our Users Say</h2>
+            <p class="section-description">Discover how PollSay is transforming enterprise polling across industries</p>
+        </div>
+
+        <div class="testimonials-slider">
+            <div class="swiper-container">
+                <div class="swiper-wrapper">
+                    <!-- Testimonial 1 -->
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="profile">
+                                <div class="avatar">JD</div>
+                                <div class="info">
+                                    <h4>John Doe</h4>
+                                    <p>Product Manager, Tech Co</p>
+                                </div>
+                            </div>
+                            <p class="quote">"PollSay revolutionized how we gather feedback from our team. The real-time insights have been invaluable for our decision-making process."</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 2 -->
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="profile">
+                                <div class="avatar">AS</div>
+                                <div class="info">
+                                    <h4>Alice Smith</h4>
+                                    <p>HR Director, Enterprise Inc</p>
+                                </div>
+                            </div>
+                            <p class="quote">"The ease of creating and analyzing polls has made our employee engagement initiatives much more effective and data-driven."</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+
+                    <!-- Testimonial 3 -->
+                    <div class="swiper-slide">
+                        <div class="testimonial-card">
+                            <div class="profile">
+                                <div class="avatar">MR</div>
+                                <div class="info">
+                                    <h4>Mike Roberts</h4>
+                                    <p>CEO, Startup Labs</p>
+                                </div>
+                            </div>
+                            <p class="quote">"PollSay has become an essential tool for our company's decision-making process. The insights we gain are invaluable."</p>
+                            <div class="rating">★★★★★</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                <button class="nav-button prev">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="nav-button next">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- testimonials section end -->
+
+
+<!-- pricing section starts -->
+
+<section id="pricing" style="padding: 4rem 1rem; position: relative; overflow: hidden;">
+    <!-- Animated Background Shapes -->
+    <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #1a1a1a, #1e1e1e); transform: skewY(-6deg); z-index: 0;"></div>
+    <div style="position: absolute; width: 300px; height: 300px; top: 10%; left: -10%; background: radial-gradient(circle, rgba(124, 77, 255, 0.5), transparent); animation: float 6s ease-in-out infinite;"></div>
+    <div style="position: absolute; width: 500px; height: 500px; bottom: -20%; right: -15%; background: radial-gradient(circle, rgba(124, 77, 255, 0.5), transparent); animation: float 6s ease-in-out infinite;"></div>
+
+    <!-- Pricing Section Header -->
+    <div style="position: relative; z-index: 10; text-align: center; margin-bottom: 40px;">
+        <h2 style="font-size: 32px; font-weight: bold; background: linear-gradient(to right, #7C4DFF, #00B8D4); -webkit-background-clip: text; color: transparent; margin-bottom: 20px;">
+            Enterprise Pricing Plans
+        </h2>
+        <p style="color: #ccc; font-size: 18px; max-width: 600px; margin: 0 auto;">
+            Scalable solutions for organizations of all sizes
+        </p>
+    </div>
+
+    <!-- Pricing Cards -->
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; max-width: 1200px; margin: 0 auto; position: relative; z-index: 10;">
+        <!-- Team Plan -->
+        <div class="pricing-card" style="background: #2d2c2c; padding: 20px; border-radius: 12px; text-align: center;">
+            <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">Team</h3>
+            <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">$299<span style="font-size: 16px; color: #999;">/mo</span></div>
+            <p style="color: #999; margin-bottom: 16px;">Perfect for growing teams</p>
+            <ul style="list-style: none; padding: 0; margin: 0 0 16px;">
+                <li style="margin-bottom: 8px;">✔ Up to 100 polls/month</li>
+                <li style="margin-bottom: 8px;">✔ Basic analytics</li>
+                <li style="margin-bottom: 8px;">✔ 5 team members</li>
+            </ul>
+            <button style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">Get Started</button>
+        </div>
+
+        <!-- Business Plan -->
+        <div class="pricing-card popular" style="background: linear-gradient(to bottom, rgba(30, 30, 30, 0.5), rgba(30, 30, 30, 0.8)); padding: 20px; border-radius: 12px; text-align: center;">
+            <div class="badge" style="background: linear-gradient(to right, #7C4DFF, #00B8D4); color: white; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 12px; margin-bottom: 16px;">
+                Popular
+            </div>
+            <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">Business</h3>
+            <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">$599<span style="font-size: 16px; color: #999;">/mo</span></div>
+            <p style="color: #999; margin-bottom: 16px;">For medium-sized enterprises</p>
+            <ul style="list-style: none; padding: 0; margin: 0 0 16px;">
+                <li style="margin-bottom: 8px;">✔ Unlimited polls</li>
+                <li style="margin-bottom: 8px;">✔ Advanced analytics</li>
+                <li style="margin-bottom: 8px;">✔ 20 team members</li>
+                <li style="margin-bottom: 8px;">✔ Priority support</li>
+            </ul>
+            <button style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">Get Started</button>
+        </div>
+
+        <!-- Enterprise Plan -->
+        <div class="pricing-card" style="background: #2d2c2c; padding: 20px; border-radius: 12px; text-align: center;">
+            <h3 style="font-size: 24px; font-weight: bold; margin-bottom: 16px;">Enterprise</h3>
+            <div style="font-size: 28px; font-weight: bold; margin-bottom: 8px;">Custom</div>
+            <p style="color: #999; margin-bottom: 16px;">For large organizations</p>
+            <ul style="list-style: none; padding: 0; margin: 0 0 16px;">
+                <li style="margin-bottom: 8px;">✔ Custom solutions</li>
+                <li style="margin-bottom: 8px;">✔ Enterprise analytics</li>
+                <li style="margin-bottom: 8px;">✔ Unlimited team members</li>
+                <li style="margin-bottom: 8px;">✔ 24/7 dedicated support</li>
+            </ul>
+            <button style="padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer;">Contact Sales</button>
+        </div>
+    </div>
+</section>
+
+
+
+
+
+
+
+
+<!-- contact me section -->
+
+<section id="contact" class="py-24 bg-neutral-800 relative overflow-hidden">
+    <!-- Diagonal background divider -->
+    <div class="absolute inset-0 bg-gradient-to-br from-neutral-900 to-neutral-800 transform -skew-y-6"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="text-center mb-16 animate__animated animate__fadeIn">
+            <h2 class="text-3xl md:text-4xl font-bold mb-6 bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">
+                Get in Touch
+            </h2>
+            <p class="text-neutral-300 text-lg max-w-2xl mx-auto">
+                Ready to transform your enterprise polling? Let's talk.
+            </p>
+        </div>
+
+        <div class="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
+            <!-- Contact Form -->
+            <div class="bg-neutral-800/50 backdrop-blur-xl p-8 rounded-2xl border border-neutral-700 hover:border-[#7C4DFF]/30 transition-all duration-500 animate__animated animate__fadeInLeft">
+                <form id="contactForm" class="space-y-6">
+                    <div class="space-y-4">
+                        <div class="group">
+                            <label for="name" class="block text-neutral-300 mb-2">Name</label>
+                            <input type="text" id="name" name="name" required
+                                class="w-full bg-neutral-900/50 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C4DFF] transition-colors"
+                                placeholder="Your name">
+                        </div>
+
+                        <div class="group">
+                            <label for="email" class="block text-neutral-300 mb-2">Email</label>
+                            <input type="email" id="email" name="email" required
+                                class="w-full bg-neutral-900/50 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C4DFF] transition-colors"
+                                placeholder="your@email.com">
+                        </div>
+
+                        <div class="group">
+                            <label for="company" class="block text-neutral-300 mb-2">Company</label>
+                            <input type="text" id="company" name="company" required
+                                class="w-full bg-neutral-900/50 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C4DFF] transition-colors"
+                                placeholder="Your company">
+                        </div>
+
+                        <div class="group">
+                            <label for="message" class="block text-neutral-300 mb-2">Message</label>
+                            <textarea id="message" name="message" rows="4" required
+                                class="w-full bg-neutral-900/50 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C4DFF] transition-colors"
+                                placeholder="How can we help?"></textarea>
+                        </div>
+                    </div>
+
+                    <button type="submit"
+                        class="w-full py-3 px-6 rounded-lg text-white font-semibold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] hover:from-[#00B8D4] hover:to-[#7C4DFF] transition-all duration-300 transform hover:-translate-y-1">
+                        Send Message
+                    </button>
+                </form>
+            </div>
+
+            <!-- Contact Information -->
+            <div class="space-y-8 animate__animated animate__fadeInRight">
+                <div class="space-y-6">
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Phone</h3>
+                            <p class="text-neutral-300">+1 (555) 123-4567</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Email</h3>
+                            <p class="text-neutral-300">contact@pollsay.com</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start space-x-4">
+                        <div class="flex-shrink-0 w-12 h-12 rounded-lg bg-gradient-to-br from-[#7C4DFF] to-[#00B8D4] p-3">
+                            <svg class="w-full h-full text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-semibold text-white mb-2">Location</h3>
+                            <p class="text-neutral-300">123 Enterprise Ave, Suite 200<br>San Francisco, CA 94105</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-neutral-900/50 p-6 rounded-xl border border-neutral-700">
+                    <h4 class="text-white font-semibold mb-2">Office Hours</h4>
+                    <p class="text-neutral-300">Monday - Friday: 9:00 AM - 6:00 PM PST<br>Weekend: Closed</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- contact me section ends here sheesh man -->
+
+
+<!-- footer section starts -->
+
+<footer id="footer" class="bg-neutral-900 pt-20 pb-10 relative overflow-hidden">
+    <!-- Gradient mesh background -->
+    <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(124,77,255,0.1),transparent_50%)]"></div>
+
+    <div class="container mx-auto px-4 relative z-10">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-16">
+            <!-- Company Info -->
+            <div class="space-y-6">
+                <div class="flex items-center">
+                    <span class="text-2xl font-bold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] text-transparent bg-clip-text">PollSay</span>
+                </div>
+                <p class="text-neutral-400">
+                    Enterprise-grade polling platform with advanced security and real-time analytics.
+                </p>
+                <div class="flex space-x-4">
+                    <a href="#" class="w-10 h-10 rounded-lg bg-neutral-800 hover:bg-[#7C4DFF]/20 flex items-center justify-center text-neutral-400 hover:text-[#7C4DFF] transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-lg bg-neutral-800 hover:bg-[#7C4DFF]/20 flex items-center justify-center text-neutral-400 hover:text-[#7C4DFF] transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/></svg>
+                    </a>
+                    <a href="#" class="w-10 h-10 rounded-lg bg-neutral-800 hover:bg-[#7C4DFF]/20 flex items-center justify-center text-neutral-400 hover:text-[#7C4DFF] transition-all duration-300">
+                        <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div>
+                <h3 class="text-white font-semibold mb-6">Quick Links</h3>
+                <ul class="space-y-4">
+                    <li><a href="#features" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Features</a></li>
+                    <li><a href="#security" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Security</a></li>
+                    <li><a href="#pricing" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Pricing</a></li>
+                    <li><a href="#contact" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Contact</a></li>
+                </ul>
+            </div>
+
+            <!-- Resources -->
+            <div>
+                <h3 class="text-white font-semibold mb-6">Resources</h3>
+                <ul class="space-y-4">
+                    <li><a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Documentation</a></li>
+                    <li><a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">API Reference</a></li>
+                    <li><a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Blog</a></li>
+                    <li><a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Support</a></li>
+                </ul>
+            </div>
+
+            <!-- Newsletter -->
+            <form id="newsletterForm" class="space-y-4">
+                <input type="email" placeholder="Enter your email" class="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-3 text-white placeholder-neutral-500 focus:outline-none focus:border-[#7C4DFF] transition-colors">
+                <button type="submit" class="w-full py-3 px-6 rounded-lg text-white font-semibold bg-gradient-to-r from-[#7C4DFF] to-[#00B8D4] hover:from-[#00B8D4] hover:to-[#7C4DFF] transition-all duration-300">
+                    Subscribe
+                </button>
+            </form>
+
+        <!-- Bottom Bar -->
+        <div class="border-t border-neutral-800 pt-8">
+            <div class="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
+                <div class="text-neutral-400">
+                    © 2024 PollSay. All rights reserved.
+                </div>
+                <div class="flex space-x-6">
+                    <a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Privacy Policy</a>
+                    <a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Terms of Service</a>
+                    <a href="#" class="text-neutral-400 hover:text-[#7C4DFF] transition-colors">Cookie Policy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+
+
+
+
+
+<!-- Scripts -->
+
+<!-- Enterprise Logos-->
+ <script src = "JavaScript/homePage/enterpriseLogo.js"></script>
+
+<!-- feature section -->
+<script src="JavaScript/homePage/feature.js"></script>
+
+<!-- security section -->
+<script src="JavaScript/homePage/security.js"></script>
+
+<!-- testimonial Section -->
+<script src="JavaScript/homePage/testimonials.js" defer></script>
+
+<!-- pricing section -->
+
+<script src="JavaScript/homePage/pricing.js"></script>
+
+<!-- contact me section -->
+
+<script src="JavaScript/homePage/contactMe.js"></script>
+
+<!-- footer -->
+<script src="JavaScript/homePage/footer.js"></script>
+
+
 </body>
-
-</html>

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PollSay</title>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Add favicon -->
+    <!-- <link rel="icon" href="favicon.ico" type="image/x-icon> -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
+</head>
+
+<body>
+    <div id="particles-js"></div>
+
+    <nav>
+        <div>
+            <img src="./assets/images/Logo - PollSay.svg" alt="Website Logo">
+        </div>
+        <div>
+            <p>POLLSAY</p>
+        </div>
+        <div>
+            <a href="signup.html" class="signup-button">Signup/Login</a>
+        </div>
+    </nav>
+    <div id="hero" class="hero">
+        <section class="user-authentication">
+            <form id="user-auth">
+                <input type="email" id="email" placeholder="Enter mail (try 00617702722_cse@vips.edu)" required>
+                <button id="sendOtpButton" type="button">Send OTP</button>
+                <input type="text" id="otp" placeholder="Enter OTP" required>
+                <input type="poleCode" id="poleCode" placeholder="Enter pole code (Try : 1cmcS3MP3G)" required>
+                <button id="submitButton" type="submit">Submit</button>
+                <button id="submitButton2" type="submit">Submit Code</button>
+            </form>
+        </section>
+    </div>
+
+    <!-- <button onclick="window.location.href='customize.html'">Go to Customize</button> -->
+
+    <footer>
+        <p>Made with ❤️ for your polling needs</p>
+    </footer>
+    <!-- scripts -->
+    <script src="https://smtpjs.com/v3/smtp.js"></script>
+
+    <!-- particle.js links -->
+    <script src="./assets/js/particles.min.js"></script>
+    <script src="./assets/js/app.js"></script>
+
+    <!-- firebase things -->
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js"></script>
+    <script type="module" src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js"></script>
+
+    <!-- Script included -->
+    <script type="module" src="script.js"></script>
+</body>
+
+</html>
