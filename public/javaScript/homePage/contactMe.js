@@ -27,8 +27,8 @@ document.getElementById('contactForm').addEventListener('submit', async function
     try {
         // Send email using EmailJS
         const response = await emailjs.send(
-            "service_p33oyab", // Replace with your service ID from EmailJS
-            "template_uxcprib", // Replace with your template ID from EmailJS
+            "service_p33oyab", 
+            "template_uxcprib", 
             {
                 from_name: name,
                 from_email: email,
