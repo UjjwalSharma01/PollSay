@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PollSay - Multi-Step Form</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#7C4DFF',
+                        secondary: '#00B8D4',
+                        dark: '#1a1a1a',
+                        surface: '#262626',
+                    },
+                    fontFamily: {
+                        poppins: ['Poppins', 'sans-serif'],
+                    },
+                }
+            }
+        }
+    </script>
+    <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
+</head>
+<body class="min-h-screen bg-dark font-poppins text-white p-4 grid place-items-center">
+    <form id="multi-step-form" class="w-full max-w-[600px] bg-surface rounded-3xl p-8 md:p-12 relative shadow-xl">
+        <!-- Step 1: Organization Details -->
+        <div class="form-step active space-y-6">
+            <!-- Progress Indicator -->
+            <div class="absolute top-4 right-4 bg-gradient-to-r from-primary to-secondary rounded-full px-6 py-2 text-sm font-medium">
+                Step 1 of 4
+            </div>
+
+            <!-- Section Header -->
+            <h2 class="text-2xl md:text-3xl font-semibold text-center mt-8 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+                Organization Details
+            </h2>
+
+            <!-- Form Fields -->
+            <div class="space-y-4">
+                <!-- Email Input -->
+                <div class="space-y-2">
+                    <label for="email" class="block text-sm font-medium text-gray-300">
+                        Work Email
+                    </label>
+                    <input type="email" id="email" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white placeholder-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                </div>
+
+                <!-- Organization Name -->
+                <div class="space-y-2">
+                    <label for="orgName" class="block text-sm font-medium text-gray-300">
+                        Organization Name
+                    </label>
+                    <input type="text" id="orgName" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white placeholder-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                </div>
+
+                <!-- Organization Size -->
+                <div class="space-y-2">
+                    <label for="orgSize" class="block text-sm font-medium text-gray-300">
+                        Organization Size
+                    </label>
+                    <select id="orgSize" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                        <option value="">Select size</option>
+                        <option value="1-10">1-10 employees</option>
+                        <option value="11-50">11-50 employees</option>
+                        <option value="51-200">51-200 employees</option>
+                        <option value="201-500">201-500 employees</option>
+                        <option value="501+">501+ employees</option>
+                    </select>
+                </div>
+
+                <!-- Industry -->
+                <div class="space-y-2">
+                    <label for="industry" class="block text-sm font-medium text-gray-300">
+                        Industry
+                    </label>
+                    <select id="industry" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                        <option value="">Select industry</option>
+                        <option value="technology">Technology</option>
+                        <option value="finance">Finance</option>
+                        <option value="healthcare">Healthcare</option>
+                        <option value="education">Education</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex gap-4 mt-8">
+                <button type="button" 
+                    class="next-step w-full py-3 px-6 bg-gradient-to-r from-primary to-secondary rounded-xl text-white font-medium hover:opacity-90 transform hover:-translate-y-0.5 transition-all duration-300">
+                    Next Step
+                </button>
+            </div>
+        </div>
+
+        <!-- Step 2: Security Setup -->
+        <div class="form-step hidden space-y-6">
+            <div class="absolute top-4 right-4 bg-gradient-to-r from-primary to-secondary rounded-full px-6 py-2 text-sm font-medium">
+                Step 2 of 4
+            </div>
+
+            <h2 class="text-2xl md:text-3xl font-semibold text-center mt-8 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+                Security Setup
+            </h2>
+
+            <div class="space-y-4">
+                <!-- Password Input -->
+                <div class="space-y-2">
+                    <label for="password" class="block text-sm font-medium text-gray-300">Password</label>
+                    <input type="password" id="password" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                </div>
+
+                <!-- Confirm Password -->
+                <div class="space-y-2">
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-300">Confirm Password</label>
+                    <input type="password" id="confirmPassword" required
+                        class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                </div>
+
+                <!-- 2FA Toggle -->
+                <!-- <div class="flex items-center p-4 bg-dark border-2 border-primary/10 rounded-xl space-x-3">
+                    <input type="checkbox" id="enable2FA"
+                        class="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/50">
+                    <label for="enable2FA" class="text-sm text-gray-300">Enable Two-Factor Authentication</label>
+                </div> -->
+            </div>
+
+            <!-- Navigation Buttons -->
+            <div class="flex gap-4 mt-8">
+                <button type="button" class="prev-step w-1/3 py-3 px-6 bg-dark border-2 border-primary/10 rounded-xl text-white font-medium hover:bg-primary/5 transition-all duration-300">
+                    Back
+                </button>
+                <button type="button" class="next-step w-2/3 py-3 px-6 bg-gradient-to-r from-primary to-secondary rounded-xl text-white font-medium hover:opacity-90 transform hover:-translate-y-0.5 transition-all duration-300">
+                    Next Step
+                </button>
+            </div>
+        </div>
+
+       <!-- Step 3: Team Setup -->
+       <div class="form-step hidden space-y-6">
+        <div class="absolute top-4 right-4 bg-gradient-to-r from-primary to-secondary rounded-full px-6 py-2 text-sm font-medium">
+            Step 3 of 4
+        </div>
+
+        <h2 class="text-2xl md:text-3xl font-semibold text-center mt-8 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Team Setup
+        </h2>
+
+        <div class="space-y-4">
+            <!-- Team Member Input -->
+            <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-300">
+                    Add Team Members
+                </label>
+                <div class="flex gap-2">
+                    <input type="email" id="teamEmail" placeholder="Enter email address"
+                        class="flex-1 px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white placeholder-gray-500 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    <button type="button" class="add-member px-6 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white hover:bg-primary/5 transition-all duration-300">
+                        Add
+                    </button>
+                </div>
+            </div>
+
+            <!-- Team Members List -->
+            <div class="team-members-list max-h-[200px] overflow-y-auto space-y-2 pr-2">
+                <!-- Sample Team Member (will be dynamically populated) -->
+                <div class="team-member flex items-center justify-between p-4 bg-dark border-2 border-primary/10 rounded-xl group hover:border-primary/30 transition-all duration-300">
+                    <span class="text-gray-300">example@email.com</span>
+                    <button type="button" class="text-gray-400 hover:text-red-500 transition-colors duration-300">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Default Role Selection -->
+            <div class="space-y-2">
+                <label for="defaultRole" class="block text-sm font-medium text-gray-300">
+                    Default Role
+                </label>
+                <select id="defaultRole" required
+                    class="w-full px-4 py-3 bg-dark border-2 border-primary/10 rounded-xl text-white focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-300">
+                    <option value="member">Team Member</option>
+                    <option value="admin">Admin</option>
+                    <option value="viewer">Viewer</option>
+                </select>
+            </div>
+
+            <!-- Auto Approve Toggle -->
+            <div class="flex items-center p-4 bg-dark border-2 border-primary/10 rounded-xl space-x-3">
+                <input type="checkbox" id="autoApprove"
+                    class="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/50">
+                <label for="autoApprove" class="text-sm text-gray-300">
+                    Auto-approve team member requests
+                </label>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex gap-4 mt-8">
+            <button type="button" class="prev-step w-1/3 py-3 px-6 bg-dark border-2 border-primary/10 rounded-xl text-white font-medium hover:bg-primary/5 transition-all duration-300">
+                Back
+            </button>
+            <button type="button" class="next-step w-2/3 py-3 px-6 bg-gradient-to-r from-primary to-secondary rounded-xl text-white font-medium hover:opacity-90 transform hover:-translate-y-0.5 transition-all duration-300">
+                Next Step
+            </button>
+        </div>
+    </div>
+
+    <!-- Step 4: Confirmation -->
+    <div class="form-step hidden space-y-6">
+        <div class="absolute top-4 right-4 bg-gradient-to-r from-primary to-secondary rounded-full px-6 py-2 text-sm font-medium">
+            Step 4 of 4
+        </div>
+
+        <h2 class="text-2xl md:text-3xl font-semibold text-center mt-8 bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">
+            Confirm Details
+        </h2>
+
+        <!-- Summary Sections -->
+        <div class="space-y-4">
+            <!-- Organization Summary -->
+            <div class="p-4 bg-dark border-2 border-primary/10 rounded-xl space-y-2">
+                <h3 class="text-lg font-medium text-gray-300">Organization Details</h3>
+                <div id="orgSummary" class="space-y-1 text-sm text-gray-400">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Security Summary -->
+            <div class="p-4 bg-dark border-2 border-primary/10 rounded-xl space-y-2">
+                <h3 class="text-lg font-medium text-gray-300">Security Settings</h3>
+                <div id="securitySummary" class="space-y-1 text-sm text-gray-400">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Team Summary -->
+            <div class="p-4 bg-dark border-2 border-primary/10 rounded-xl space-y-2">
+                <h3 class="text-lg font-medium text-gray-300">Team Setup</h3>
+                <div id="teamSummary" class="space-y-1 text-sm text-gray-400">
+                    <!-- Will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Terms Acceptance -->
+            <div class="flex items-center p-4 bg-dark border-2 border-primary/10 rounded-xl space-x-3">
+                <input type="checkbox" id="termsAccept" required
+                    class="w-5 h-5 rounded border-primary/20 text-primary focus:ring-primary/50">
+                <label for="termsAccept" class="text-sm text-gray-300">
+                    I accept the 
+                    <a href="#" class="text-secondary hover:underline">Terms of Service</a>
+                    and
+                    <a href="#" class="text-secondary hover:underline">Privacy Policy</a>
+                </label>
+            </div>
+        </div>
+
+        <!-- Navigation Buttons -->
+        <div class="flex gap-4 mt-8">
+            <button type="button" class="prev-step w-1/3 py-3 px-6 bg-dark border-2 border-primary/10 rounded-xl text-white font-medium hover:bg-primary/5 transition-all duration-300">
+                Back
+            </button>
+            <button type="submit" class="w-2/3 py-3 px-6 bg-gradient-to-r from-primary to-secondary rounded-xl text-white font-medium hover:opacity-90 transform hover:-translate-y-0.5 transition-all duration-300">
+                Complete Setup
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading Overlay (Hidden by default) -->
+    <div id="loadingOverlay" class="hidden absolute inset-0 bg-dark/50 backdrop-blur-sm rounded-3xl flex items-center justify-center">
+        <div class="animate-spin rounded-full h-12 w-12 border-4 border-primary border-t-transparent"></div>
+    </div>
+</form>
+
+<!-- Success/Error Toast (Hidden by default) -->
+<div id="toast" class="fixed top-4 right-4 max-w-md p-4 rounded-xl shadow-lg transform transition-all duration-300 scale-0">
+    <!-- Will be styled based on success/error -->
+</div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="/public/js/signup/script.js"></script>
+</body>
+</html>
