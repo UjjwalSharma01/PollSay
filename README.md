@@ -37,6 +37,16 @@ Future enhancements may include:
 - Additional security measures, such as captcha verification and unique identifiers for voters.
 - Dynamic addition of poll options for increased flexibility.
 
+## Documentation
+
+For detailed documentation, please refer to the following:
+
+- [Project Overview and Features](docs/overview.md#project-overview)
+- [Setup and Usage Instructions](docs/overview.md#setup-and-usage-instructions)
+- [API Documentation and Code Structure](docs/overview.md#api-documentation-and-code-structure)
+- [User Guide and Contribution Guidelines](docs/overview.md#user-guide-and-contribution-guidelines)
+- [Security Measures and Scripts Documentation](docs/overview.md#security-measures-and-scripts-documentation)
+
 ## Contact
 
 If you have any questions or feedback, please feel free to contact us. We'd love to hear from you!
