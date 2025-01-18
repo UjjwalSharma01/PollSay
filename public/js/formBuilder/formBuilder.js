@@ -157,43 +157,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Show Preview Modal
-
     function showPreviewModal(formData) {
         const modalBg = document.createElement('div');
         modalBg.className = 'fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50';
-    
+
         const modalContent = document.createElement('div');
         modalContent.className = 'bg-dark rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2 overflow-y-auto max-h-screen border border-mid glass-effect';
-    
+
         // Modal Header
         const header = document.createElement('h2');
         header.className = 'text-2xl font-bold mb-4 text-textColor bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent';
         header.textContent = 'Form Preview';
         modalContent.appendChild(header);
-    
+
         // Form Title and Description
         const formTitle = document.createElement('h3');
         formTitle.className = 'text-xl font-semibold text-textColor';
         formTitle.textContent = formData.title || 'Untitled Form';
         modalContent.appendChild(formTitle);
-    
+
         const formDesc = document.createElement('p');
         formDesc.className = 'text-light mb-4';
         formDesc.textContent = formData.description || '';
         modalContent.appendChild(formDesc);
-    
+
         // Form Fields
         const previewForm = document.createElement('form');
         previewForm.className = 'space-y-4';
         formData.fields.forEach(field => {
             const fieldDiv = document.createElement('div');
             fieldDiv.className = 'mb-4 p-4 rounded-lg bg-mid/30 backdrop-blur-sm';
-    
+
             const question = document.createElement('label');
             question.className = 'block text-textColor font-medium mb-2';
             question.textContent = field.question + (field.required ? ' *' : '');
             fieldDiv.appendChild(question);
-    
+
             if (field.type === 'short-text') {
                 const input = document.createElement('input');
                 input.type = 'text';
@@ -237,22 +236,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     fieldDiv.appendChild(optionDiv);
                 });
             }
-    
+
             if (field.helpText) {
                 const help = document.createElement('p');
                 help.className = 'text-sm text-light mt-1';
                 help.textContent = field.helpText;
                 fieldDiv.appendChild(help);
             }
-    
+
             previewForm.appendChild(fieldDiv);
         });
         modalContent.appendChild(previewForm);
-    
+
         // Modal Buttons
         const buttonDiv = document.createElement('div');
         buttonDiv.className = 'flex justify-end mt-6 space-x-3';
-    
+
         const editBtn = document.createElement('button');
         editBtn.type = 'button';
         editBtn.textContent = 'Edit';
@@ -260,18 +259,36 @@ document.addEventListener('DOMContentLoaded', () => {
         editBtn.addEventListener('click', () => {
             document.body.removeChild(modalBg);
         });
-    
+
         const shareBtn = document.createElement('button');
         shareBtn.type = 'button';
         shareBtn.textContent = 'Share';
         shareBtn.className = 'gradient-btn text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300';
         shareBtn.addEventListener('click', async () => {
+            // Check if user is logged in
+            const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+            if (!sessionData?.session) {
+                alert('Please log in before creating a form.');
+                return;
+            }
+
+            // Retrieve user and org info (adjust key names as per your setup)
+            const userID = sessionData.session.user.id;
+            const orgID = sessionData.session.user.user_metadata?.org_id; // or wherever org_id is stored
+
+            if (!orgID) {
+                alert('No organization found. Please ensure your account has an associated org_id.');
+                return;
+            }
+
             const shareCode = generateRandomString(12);
             const formToSave = {
                 title: formData.title,
                 description: formData.description,
                 fields: formData.fields,
-                share_code: shareCode
+                share_code: shareCode,
+                org_id: orgID,
+                created_by: userID
             };
 
             const { data, error } = await supabase
@@ -283,8 +300,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const shareLink = `${window.location.origin}/form/${shareCode}`;
-            alert(`Form shared! Share link: ${shareLink}`);
+            // Construct the share link and copy it to clipboard
+            const shareLink = `pollsay/${shareCode}`;
+            try {
+                await navigator.clipboard.writeText(shareLink);
+                alert(`Form shared! Link copied to clipboard: ${shareLink}`);
+            } catch (err) {
+                alert(`Form shared! Please copy the link: ${shareLink}`);
+            }
             document.body.removeChild(modalBg);
         });
 
@@ -297,13 +320,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Generate Random String
-   // Generate Random String
-   function generateRandomString(length) {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    let result = '';
-    for (let i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
+    function generateRandomString(length) {
+        const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+        let result = '';
+        for (let i = 0; i < length; i++) {
+            result += chars.charAt(Math.floor(Math.random() * chars.length));
+        }
+        return result;
     }
-    return result;
-}
 });
