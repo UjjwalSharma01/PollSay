@@ -1,7 +1,11 @@
 import { supabase } from '../../../src/config/supabase.js';
 import { encryptionService } from '../services/encryptionService.js';
+import setupImageErrorHandlers from '../imageErrorHandler.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Setup image error handlers first thing to prevent placeholder errors
+  setupImageErrorHandlers();
+  
   // Check if user is logged in
   const { data: { session } } = await supabase.auth.getSession();
   if (!session) {
