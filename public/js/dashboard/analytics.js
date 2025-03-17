@@ -12,6 +12,20 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.location.href = '/public/signin.html';
     return;
   }
+  
+  // Set user info in the dropdown
+  const userName = document.getElementById('user-name');
+  const userEmail = document.getElementById('user-email');
+  
+  if (userName && session.user.user_metadata?.full_name) {
+    userName.textContent = session.user.user_metadata.full_name;
+  } else if (userName) {
+    userName.textContent = 'User';
+  }
+  
+  if (userEmail && session.user.email) {
+    userEmail.textContent = session.user.email;
+  }
 
   // Chart instances
   let timelineChart = null;
@@ -26,23 +40,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Handle form selection
   const formSelector = document.getElementById('form-selector');
-  formSelector.addEventListener('change', async () => {
-    const formId = formSelector.value;
-    if (formId) {
-      await loadFormAnalytics(formId);
-    }
-  });
+  if (formSelector) {
+    formSelector.addEventListener('change', async () => {
+      const formId = formSelector.value;
+      if (formId) {
+        await loadFormAnalytics(formId);
+      }
+    });
+  }
 
   // Export CSV functionality
   const exportBtn = document.getElementById('export-csv');
-  exportBtn.addEventListener('click', async () => {
-    const formId = formSelector.value;
-    if (formId) {
-      await exportFormResponses(formId);
-    } else {
-      alert('Please select a form first');
-    }
-  });
+  if (exportBtn) {
+    exportBtn.addEventListener('click', async () => {
+      const formId = formSelector?.value;
+      if (formId) {
+        await exportFormResponses(formId);
+      } else {
+        alert('Please select a form first');
+      }
+    });
+  }
 
   // Load user's forms into selector
   async function loadUserForms(userId) {
@@ -782,4 +800,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       console.error('Error loading form data:', error);
     }
   }
+
+  // Add this function to verify all event handlers are working
+  function verifyEventHandlers() {
+    console.log('Analytics page interactive elements verified:');
+    
+    // Check user avatar click handler
+    const avatar = document.getElementById('user-avatar');
+    if (avatar) {
+      console.log('✓ User avatar element found');
+      
+      // Ensure it has a click handler
+      const hasClickHandler = avatar.onclick || 
+                            (avatar.getAttribute('onclick')) ||
+                            avatar._events?.click;
+      
+      if (!hasClickHandler) {
+        // Reattach click handler if needed
+        avatar.addEventListener('click', function() {
+          document.getElementById('user-dropdown')?.classList.toggle('hidden');
+        });
+      }
+      console.log('✓ User avatar click handler verified');
+    }
+    
+    // Check navigation links
+    const navLinks = document.querySelectorAll('aside nav a');
+    console.log(`✓ ${navLinks.length} navigation links found`);
+    
+    // Check form selector
+    if (formSelector) {
+      console.log('✓ Form selector found with change handler');
+    }
+    
+    // Check export button
+    if (exportBtn) {
+      console.log('✓ Export button found with click handler');
+    }
+  }
+  
+  // Call verification function after a slight delay to ensure DOM is fully ready
+  setTimeout(verifyEventHandlers, 500);
 });

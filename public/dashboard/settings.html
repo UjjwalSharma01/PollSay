@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | PollSay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#171717',
+                        primary: '#7C4DFF',
+                        secondary: '#00B8D4',
+                        dark: '#262626',
+                        mid: '#404040',
+                        light: '#d4d4d4',
+                        textColor: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #171717;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .settings-card {
+            background-color: #262626;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark border-r border-mid hidden lg:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">PollSay</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="/public/dashboard/index.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-home mr-3"></i> Dashboard
+                </a>
+                <a href="/public/dashboard/analytics.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-chart-bar mr-3"></i> Analytics
+                </a>
+                <a href="/public/form-builder.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-clipboard-list mr-3"></i> Forms
+                </a>
+                <a href="/public/dashboard/team.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-users mr-3"></i> Team
+                </a>
+                <a href="/public/dashboard/settings.html" class="flex items-center px-6 py-3 bg-mid text-white transition-colors">
+                    <i class="fas fa-cog mr-3"></i> Settings
+                </a>
+                <a href="/public/dashboard/encryption-settings.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-shield-alt mr-3"></i> Encryption
+                </a>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="bg-dark border-b border-mid p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-semibold">Settings</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <img id="user-avatar" class="w-8 h-8 rounded-full cursor-pointer" alt="Profile" 
+                                 src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='40' height='40'%3E%3Cpath fill='%23ccc' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E">
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-dark border border-mid rounded-lg shadow-lg z-10">
+                                <div class="px-4 py-3 border-b border-mid">
+                                    <p id="user-name" class="text-sm font-medium">Loading...</p>
+                                    <p id="user-email" class="text-xs text-gray-400 truncate">Loading...</p>
+                                </div>
+                                <ul>
+                                    <li><a href="/public/dashboard/settings.html" class="block px-4 py-2 text-sm hover:bg-mid">Settings</a></li>
+                                    <li><button id="logout-btn" class="w-full text-left px-4 py-2 text-sm hover:bg-mid">Sign out</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Settings Content -->
+            <div class="p-6">
+                <!-- Settings Navigation -->
+                <div class="mb-8 border-b border-mid">
+                    <nav class="flex space-x-6" id="settings-tabs">
+                        <button class="tab-button active py-2 px-1 border-b-2 border-primary text-white" data-tab="profile">Profile</button>
+                        <button class="tab-button py-2 px-1 border-b-2 border-transparent text-light hover:text-white" data-tab="account">Account</button>
+                        <button class="tab-button py-2 px-1 border-b-2 border-transparent text-light hover:text-white" data-tab="security">Security</button>
+                        <button class="tab-button py-2 px-1 border-b-2 border-transparent text-light hover:text-white" data-tab="data">Data Management</button>
+                    </nav>
+                </div>
+
+                <!-- Profile Tab Content -->
+                <div id="profile-tab" class="tab-content">
+                    <h2 class="text-xl font-semibold mb-6">Profile Settings</h2>
+                    
+                    <!-- Profile Photo -->
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Profile Photo</h3>
+                        </div>
+                        <div class="p-6 flex flex-col md:flex-row md:items-center">
+                            <div class="flex-shrink-0 mb-4 md:mb-0 md:mr-6">
+                                <img id="profile-photo" class="w-24 h-24 rounded-full" alt="Profile" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='40' height='40'%3E%3Cpath fill='%23ccc' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E">
+                            </div>
+                            <div class="space-y-3">
+                                <div class="flex flex-col sm:flex-row sm:space-x-3">
+                                    <button class="mb-2 sm:mb-0 px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">Upload Photo</button>
+                                    <button class="px-4 py-2 bg-dark border border-light/20 hover:bg-mid rounded-lg transition-colors">Remove Photo</button>
+                                </div>
+                                <p class="text-sm text-light">Recommended: Square image, at least 400x400 pixels</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Personal Information -->
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Personal Information</h3>
+                        </div>
+                        <div class="p-6">
+                            <form id="profile-form" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label for="full-name" class="block text-sm font-medium text-light mb-1">Full Name</label>
+                                        <input type="text" id="full-name" name="full-name" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                    </div>
+                                    <div>
+                                        <label for="display-name" class="block text-sm font-medium text-light mb-1">Display Name</label>
+                                        <input type="text" id="display-name" name="display-name" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                    </div>
+                                    <div>
+                                        <label for="job-title" class="block text-sm font-medium text-light mb-1">Job Title</label>
+                                        <input type="text" id="job-title" name="job-title" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                    </div>
+                                    <div>
+                                        <label for="department" class="block text-sm font-medium text-light mb-1">Department</label>
+                                        <input type="text" id="department" name="department" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <label for="bio" class="block text-sm font-medium text-light mb-1">Bio</label>
+                                    <textarea id="bio" name="bio" rows="4" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50"></textarea>
+                                </div>
+                                
+                                <div>
+                                    <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Danger Zone -->
+                    <div class="settings-card">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Danger Zone</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <h4 class="font-medium text-red-400">Delete Account</h4>
+                                        <p class="text-sm text-light">Permanently delete your account and all associated data</p>
+                                    </div>
+                                    <button id="delete-account-btn" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors">Delete Account</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Account Tab Content -->
+                <div id="account-tab" class="tab-content hidden">
+                    <h2 class="text-xl font-semibold mb-6">Account Settings</h2>
+                    
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Email Address</h3>
+                        </div>
+                        <div class="p-6">
+                            <form id="email-form" class="space-y-6">
+                                <div>
+                                    <label for="current-email" class="block text-sm font-medium text-light mb-1">Current Email</label>
+                                    <input type="email" id="current-email" name="current-email" disabled class="w-full px-3 py-2 bg-dark/50 border border-mid rounded-lg text-light focus:outline-none">
+                                </div>
+                                <div>
+                                    <label for="new-email" class="block text-sm font-medium text-light mb-1">New Email</label>
+                                    <input type="email" id="new-email" name="new-email" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                </div>
+                                <div>
+                                    <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">Update Email</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Organization Settings</h3>
+                        </div>
+                        <div class="p-6">
+                            <form id="org-form" class="space-y-6">
+                                <div>
+                                    <label for="org-name" class="block text-sm font-medium text-light mb-1">Organization Name</label>
+                                    <input type="text" id="org-name" name="org-name" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                </div>
+                                <div>
+                                    <label for="org-size" class="block text-sm font-medium text-light mb-1">Organization Size</label>
+                                    <select id="org-size" name="org-size" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                        <option value="1-10">1-10 employees</option>
+                                        <option value="11-50">11-50 employees</option>
+                                        <option value="51-200">51-200 employees</option>
+                                        <option value="201-500">201-500 employees</option>
+                                        <option value="501+">501+ employees</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="industry" class="block text-sm font-medium text-light mb-1">Industry</label>
+                                    <select id="industry" name="industry" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                        <option value="technology">Technology</option>
+                                        <option value="finance">Finance</option>
+                                        <option value="healthcare">Healthcare</option>
+                                        <option value="education">Education</option>
+                                        <option value="manufacturing">Manufacturing</option>
+                                        <option value="retail">Retail</option>
+                                        <option value="government">Government</option>
+                                        <option value="nonprofit">Non-Profit</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Tab Content -->
+                <div id="security-tab" class="tab-content hidden">
+                    <h2 class="text-xl font-semibold mb-6">Security Settings</h2>
+                    
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Change Password</h3>
+                        </div>
+                        <div class="p-6">
+                            <form id="password-form" class="space-y-6">
+                                <div>
+                                    <label for="current-password" class="block text-sm font-medium text-light mb-1">Current Password</label>
+                                    <input type="password" id="current-password" name="current-password" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                </div>
+                                <div>
+                                    <label for="new-password" class="block text-sm font-medium text-light mb-1">New Password</label>
+                                    <input type="password" id="new-password" name="new-password" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                </div>
+                                <div>
+                                    <label for="confirm-password" class="block text-sm font-medium text-light mb-1">Confirm New Password</label>
+                                    <input type="password" id="confirm-password" name="confirm-password" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                                </div>
+                                <div>
+                                    <button type="submit" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">Update Password</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Enhanced Security</h3>
+                        </div>
+                        <div class="p-6">
+                            <div class="mb-6">
+                                <div>
+                                    <h4 class="font-medium">Security Verification</h4>
+                                    <p class="text-sm text-light mb-4">Add an extra layer of security by requiring email verification for sensitive account changes.</p>
+                                    <div class="relative inline-block w-12 h-6">
+                                        <input type="checkbox" id="toggle-security-email" class="sr-only peer">
+                                        <label for="toggle-security-email" class="block cursor-pointer bg-mid rounded-full h-6 w-12 peer-checked:bg-primary transition-colors">
+                                            <span class="absolute left-1 top-1 bg-white rounded-full w-4 h-4 transition-transform peer-checked:translate-x-6"></span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-4 bg-dark/50 rounded-lg border border-mid/50">
+                                <h5 class="font-medium mb-2 flex items-center">
+                                    <i class="fas fa-shield-alt text-secondary mr-2"></i> Security Tips
+                                </h5>
+                                <p class="text-sm text-light">Use a strong, unique password and keep your recovery email up-to-date to ensure account security.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Data Management Tab Content -->
+                <div id="data-tab" class="tab-content hidden">
+                    <h2 class="text-xl font-semibold mb-6">Data Management</h2>
+                    
+                    <!-- Data Export Section - Simplified -->
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Data Export</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <p class="text-sm text-light mb-4">Export all your data in a portable CSV format. This includes your forms, responses, and account settings.</p>
+                            <button type="button" class="flex items-center px-4 py-2 bg-dark border border-light/20 hover:bg-mid rounded-lg transition-colors">
+                                <i class="fas fa-file-csv mr-2"></i> Export as CSV
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Management - Simplified -->
+                    <div class="settings-card mb-6">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium">Data Management</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div>
+                                <h4 class="font-medium mb-2">Form Response Management</h4>
+                                <p class="text-sm text-light mb-4">Manage your form responses manually. You can delete old responses that are no longer needed to free up space.</p>
+                                <button type="button" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg transition-colors">
+                                    Manage Responses
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Data Deletion Section -->
+                    <div class="settings-card">
+                        <div class="p-6 border-b border-mid">
+                            <h3 class="text-lg font-medium text-red-400">Data Deletion</h3>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center justify-between">
+                                <div>
+                                    <h4 class="font-medium">Delete Form Responses</h4>
+                                    <p class="text-sm text-light">Permanently delete all responses from your forms.</p>
+                                </div>
+                                <button type="button" class="px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors">
+                                    Delete All Responses
+                                </button>
+                            </div>
+                            
+                            <div class="pt-4 mt-4 border-t border-mid">
+                                <h4 class="font-medium text-red-400">Delete Account</h4>
+                                <p class="text-sm text-light">Permanently delete your account and all associated data.</p>
+                                <button type="button" class="mt-2 px-4 py-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors">
+                                    Delete Account
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- JavaScript for tab functionality -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/src/config/supabase.js"></script>
+    <script type="module" src="/public/js/dashboard/settings.js"></script>
+</body>
+</html>

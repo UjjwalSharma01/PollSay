@@ -92,7 +92,7 @@
                                     <p id="user-email" class="text-xs text-gray-400 truncate">Loading...</p>
                                 </div>
                                 <ul>
-                                    <li><a href="#" class="block px-4 py-2 text-sm hover:bg-mid">Settings</a></li>
+                                    <li><a href="/public/dashboard/settings.html" class="block px-4 py-2 text-sm hover:bg-mid">Settings</a></li>
                                     <li><button id="logout-btn" class="w-full text-left px-4 py-2 text-sm hover:bg-mid">Sign out</button></li>
                                 </ul>
                             </div>
@@ -210,12 +210,15 @@
                     <div class="md:col-span-2">
                         <h2 class="text-xl font-semibold mb-4">Security Tips</h2>
                         <div class="dashboard-card h-[400px] overflow-y-auto">
-                            <div class="p-4 border-b border-mid">
+                            <div class="p-4">
                                 <h3 class="font-medium mb-2 flex items-center">
                                     <i class="fas fa-key text-secondary mr-2"></i>
                                     Strong Passwords
                                 </h3>
                                 <p class="text-sm text-light">Use a unique, complex password with a mix of letters, numbers, and symbols.</p>
+                                <p class="text-xs mt-1">
+                                    <a href="/public/dashboard/settings.html?tab=security" class="text-primary hover:underline">Manage password settings</a>
+                                </p>
                             </div>
                             <div class="p-4 border-b border-mid">
                                 <h3 class="font-medium mb-2 flex items-center">
@@ -223,6 +226,9 @@
                                     Enable Encryption
                                 </h3>
                                 <p class="text-sm text-light">End-to-end encryption ensures that only authorized users can access form responses.</p>
+                                <p class="text-xs mt-1">
+                                    <a href="/public/dashboard/encryption-settings.html" class="text-primary hover:underline">Configure encryption</a>
+                                </p>
                             </div>
                             <div class="p-4 border-b border-mid">
                                 <h3 class="font-medium mb-2 flex items-center">
