@@ -217,13 +217,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         }, {})
       };
 
+      // Check if form should be public
+      const isPublic = document.getElementById('form-is-public').checked;
+
       const formInsertData = {
         title: formData.title,
         description: formData.description,
         org_id: orgId,
         created_by: session.user.id,
         share_code: shareCode,
-        metadata
+        metadata,
+        is_public: isPublic
       };
 
       if (encryptionEnabled) {

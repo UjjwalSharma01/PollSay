@@ -111,6 +111,19 @@
     </div>
 
     <!-- Scripts -->
+    <script>
+        // Helper function to handle checkbox clicks safely
+        function handleNameCheckbox() {
+            const checkbox = document.getElementById('show-real-name');
+            if (checkbox) {
+                checkbox.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                });
+            }
+        }
+        // Initialize when DOM is ready
+        document.addEventListener('DOMContentLoaded', handleNameCheckbox);
+    </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>
     <script type="module" src="/public/js/formResponse/responseHandler.js"></script>
