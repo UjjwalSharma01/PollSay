@@ -252,19 +252,43 @@
         import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
         import { supabase } from '../../src/config/supabase.js';
         import { 
+            getCurrentOrgId,
+            getOrganizationDetails, 
             getTeamMembers, 
             getPendingInvites, 
             sendInvitation, 
             resendInvitation, 
             cancelInvitation, 
             removeTeamMember, 
-            updateTeamMemberRole 
+            updateTeamMemberRole,
+            isOrgAdmin
         } from '../js/dashboard/team.js';
         
         document.addEventListener('DOMContentLoaded', async () => {
             // Initialize common dashboard elements
             const session = await initializeDashboard();
             if (!session) return;
+            
+            // Get the current organization ID
+            const orgId = await getCurrentOrgId();
+            if (!orgId) {
+                alert('You must be part of an organization to access this page.');
+                window.location.href = '/public/dashboard/index.html';
+                return;
+            }
+
+            // Get organization details
+            const orgDetails = await getOrganizationDetails(orgId);
+            console.log('Organization:', orgDetails);
+            
+            // Check if user is an admin
+            const isAdmin = await isOrgAdmin(orgId);
+            if (!isAdmin) {
+                // Hide admin-only features
+                document.getElementById('invite-member-btn')?.classList.add('hidden');
+                document.querySelectorAll('[data-action="edit"], [data-action="remove"], [data-action="resend"], [data-action="cancel"]')
+                    .forEach(el => el.classList.add('hidden'));
+            }
             
             // DOM Elements
             const inviteMemberBtn = document.getElementById('invite-member-btn');
@@ -280,7 +304,7 @@
             const refreshInvites = document.getElementById('refresh-invites');
             
             // Show/Hide invite modal
-            inviteMemberBtn.addEventListener('click', () => {
+            inviteMemberBtn?.addEventListener('click', () => {
                 inviteModal.classList.remove('hidden');
             });
             
@@ -289,32 +313,31 @@
                 inviteForm.reset();
             };
             
-            closeInviteModal.addEventListener('click', hideModal);
-            cancelInvite.addEventListener('click', hideModal);
+            closeInviteModal?.addEventListener('click', hideModal);
+            cancelInvite?.addEventListener('click', hideModal);
             
             // Close modal when clicking outside
-            inviteModal.addEventListener('click', (e) => {
+            inviteModal?.addEventListener('click', (e) => {
                 if (e.target === inviteModal) {
                     hideModal();
                 }
             });
             
             // Handle invite form submission
-            inviteForm.addEventListener('submit', async (e) => {
+            inviteForm?.addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const email = document.getElementById('invite-email').value;
                 const role = document.getElementById('invite-role').value;
-                const message = document.getElementById('invite-message').value;
                 
                 try {
-                    const result = await sendInvitation(email, role, message, 'current-org-id');
+                    const result = await sendInvitation(email, role, orgId);
                     if (result.success) {
-                        alert(`Invitation sent to ${email} for role: ${role}`);
+                        alert(result.message || `Invitation sent to ${email}`);
                         hideModal();
                         loadPendingInvites();
                     } else {
-                        alert(`Failed to send invitation: ${result.error}`);
+                        alert(result.error || 'Failed to send invitation.');
                     }
                 } catch (error) {
                     console.error('Error sending invitation:', error);
@@ -325,33 +348,40 @@
             // Load team members
             async function loadTeamMembers() {
                 try {
-                    const members = await getTeamMembers('current-org-id');
+                    const members = await getTeamMembers(orgId);
                     
                     // Update counts
-                    document.getElementById('members-count').textContent = members.length;
-                    document.getElementById('admins-count').textContent = members.filter(m => m.role === 'admin').length;
+                    document.getElementById('members-count').textContent = members.filter(m => m.status === 'active').length;
+                    document.getElementById('admins-count').textContent = members.filter(m => m.role === 'admin' && m.status === 'active').length;
                     
                     // Clear and populate table
                     teamMembersTable.innerHTML = '';
                     
-                    if (members.length === 0) {
+                    const activeMembers = members.filter(m => m.status === 'active');
+                    if (activeMembers.length === 0) {
                         teamMembersTable.innerHTML = `
                             <tr class="text-center">
                                 <td colspan="6" class="px-6 py-8 text-light">
-                                    No team members found
+                                    No active team members found
                                 </td>
                             </tr>
                         `;
                         return;
                     }
                     
-                    members.forEach(member => {
+                    activeMembers.forEach(member => {
                         const row = document.createElement('tr');
+                        const joinedDate = new Date(member.created_at).toLocaleDateString();
+                        const lastLogin = member.last_login ? new Date(member.last_login).toLocaleDateString() : 'Never';
+                        
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-10 w-10">
-                                        <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random" alt="${member.full_name}">
+                                        <img class="h-10 w-10 rounded-full" 
+                                            src="${member.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random`}" 
+                                            alt="${member.full_name}"
+                                            onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name || 'User')}&background=random';">
                                     </div>
                                     <div class="ml-4">
                                         <div class="text-sm font-medium">${member.full_name}</div>
@@ -373,38 +403,75 @@
                                     ${member.status.charAt(0).toUpperCase() + member.status.slice(1)}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">${new Date(member.joined_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${joinedDate}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
-                                <button class="text-primary hover:text-primary-dark mr-3" data-id="${member.id}" data-action="edit">
+                                ${isAdmin ? `
+                                <button class="text-primary hover:text-primary-dark mr-3" data-id="${member.id}" data-action="edit" 
+                                    ${session?.user?.id === member.user_id ? 'disabled title="Cannot edit yourself"' : ''}>
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                ${member.role !== 'admin' ? 
-                                    `<button class="text-red-500 hover:text-red-700" data-id="${member.id}" data-action="remove">
+                                ${member.role !== 'admin' || (member.role === 'admin' && isAdmin) ? 
+                                    `<button class="text-red-500 hover:text-red-700" data-id="${member.id}" data-action="remove"
+                                        ${session?.user?.id === member.user_id ? 'disabled title="Cannot remove yourself"' : ''}>
                                         <i class="fas fa-trash"></i>
-                                    </button>` : ''}
+                                    </button>` : ''}` : ''}
                             </td>
                         `;
                         teamMembersTable.appendChild(row);
                     });
                     
                     // Set up action buttons
-                    document.querySelectorAll('[data-action="edit"]').forEach(button => {
-                        button.addEventListener('click', () => {
-                            const memberId = button.getAttribute('data-id');
-                            alert(`Edit member with ID: ${memberId}`);
-                            // Implement edit functionality
+                    if (isAdmin) {
+                        document.querySelectorAll('[data-action="edit"]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                if (button.hasAttribute('disabled')) return;
+                                
+                                const memberId = button.getAttribute('data-id');
+                                const member = members.find(m => m.id === memberId);
+                                
+                                // Create a simple role selection dialog
+                                const newRole = prompt(
+                                    `Change role for ${member.email}. Current role: ${member.role}\n\nEnter new role (admin, member, viewer):`, 
+                                    member.role
+                                );
+                                
+                                if (newRole && ['admin', 'member', 'viewer'].includes(newRole.toLowerCase())) {
+                                    updateTeamMemberRole(memberId, newRole.toLowerCase())
+                                        .then(result => {
+                                            if (result.success) {
+                                                alert(result.message || 'Role updated successfully');
+                                                loadTeamMembers();
+                                            } else {
+                                                alert(result.error || 'Failed to update role');
+                                            }
+                                        });
+                                } else if (newRole) {
+                                    alert('Invalid role. Please enter admin, member, or viewer.');
+                                }
+                            });
                         });
-                    });
-                    
-                    document.querySelectorAll('[data-action="remove"]').forEach(button => {
-                        button.addEventListener('click', () => {
-                            const memberId = button.getAttribute('data-id');
-                            if (confirm('Are you sure you want to remove this team member?')) {
-                                // Implement remove functionality
-                                alert(`Removing member with ID: ${memberId}`);
-                            }
+                        
+                        document.querySelectorAll('[data-action="remove"]').forEach(button => {
+                            button.addEventListener('click', () => {
+                                if (button.hasAttribute('disabled')) return;
+                                
+                                const memberId = button.getAttribute('data-id');
+                                const member = members.find(m => m.id === memberId);
+                                
+                                if (confirm(`Are you sure you want to remove ${member.email} from the team?`)) {
+                                    removeTeamMember(memberId)
+                                        .then(result => {
+                                            if (result.success) {
+                                                alert(result.message || 'Team member removed successfully');
+                                                loadTeamMembers();
+                                            } else {
+                                                alert(result.error || 'Failed to remove team member');
+                                            }
+                                        });
+                                }
+                            });
                         });
-                    });
+                    }
                     
                 } catch (error) {
                     console.error('Error loading team members:', error);
@@ -421,7 +488,7 @@
             // Load pending invites
             async function loadPendingInvites() {
                 try {
-                    const invites = await getPendingInvites('current-org-id');
+                    const invites = await getPendingInvites(orgId);
                     
                     // Update count
                     document.getElementById('pending-invites').textContent = invites.length;
@@ -442,6 +509,8 @@
                     
                     invites.forEach(invite => {
                         const row = document.createElement('tr');
+                        const sentDate = new Date(invite.created_at).toLocaleDateString();
+                        
                         row.innerHTML = `
                             <td class="px-6 py-4 whitespace-nowrap text-sm">${invite.email}</td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -453,57 +522,62 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">${invite.invited_by}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm">${new Date(invite.created_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${sentDate}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                ${isAdmin ? `
                                 <button class="text-primary hover:text-primary-dark mr-3" data-id="${invite.id}" data-action="resend">
                                     <i class="fas fa-paper-plane"></i>
                                 </button>
                                 <button class="text-red-500 hover:text-red-700" data-id="${invite.id}" data-action="cancel">
                                     <i class="fas fa-times"></i>
-                                </button>
+                                </button>` : ''}
                             </td>
                         `;
                         pendingInvitesTable.appendChild(row);
                     });
                     
-                    // Set up action buttons
-                    document.querySelectorAll('[data-action="resend"]').forEach(button => {
-                        button.addEventListener('click', async () => {
-                            const inviteId = button.getAttribute('data-id');
-                            try {
-                                const result = await resendInvitation(inviteId);
-                                if (result.success) {
-                                    alert('Invitation resent successfully');
-                                    loadPendingInvites();
-                                } else {
-                                    alert(`Failed to resend invitation: ${result.error}`);
-                                }
-                            } catch (error) {
-                                console.error('Error resending invitation:', error);
-                                alert('Failed to resend invitation. Please try again.');
-                            }
-                        });
-                    });
-                    
-                    document.querySelectorAll('[data-action="cancel"]').forEach(button => {
-                        button.addEventListener('click', async () => {
-                            const inviteId = button.getAttribute('data-id');
-                            if (confirm('Are you sure you want to cancel this invitation?')) {
+                    // Set up action buttons for admins
+                    if (isAdmin) {
+                        document.querySelectorAll('[data-action="resend"]').forEach(button => {
+                            button.addEventListener('click', async () => {
+                                const inviteId = button.getAttribute('data-id');
                                 try {
-                                    const result = await cancelInvitation(inviteId);
+                                    const result = await resendInvitation(inviteId);
                                     if (result.success) {
-                                        alert('Invitation canceled successfully');
+                                        alert(result.message || 'Invitation resent successfully');
                                         loadPendingInvites();
                                     } else {
-                                        alert(`Failed to cancel invitation: ${result.error}`);
+                                        alert(result.error || 'Failed to resend invitation');
                                     }
                                 } catch (error) {
-                                    console.error('Error canceling invitation:', error);
-                                    alert('Failed to cancel invitation. Please try again.');
+                                    console.error('Error resending invitation:', error);
+                                    alert('Failed to resend invitation. Please try again.');
                                 }
-                            }
+                            });
                         });
-                    });
+                        
+                        document.querySelectorAll('[data-action="cancel"]').forEach(button => {
+                            button.addEventListener('click', async () => {
+                                const inviteId = button.getAttribute('data-id');
+                                const invite = invites.find(i => i.id === inviteId);
+                                
+                                if (confirm(`Are you sure you want to cancel the invitation to ${invite.email}?`)) {
+                                    try {
+                                        const result = await cancelInvitation(inviteId);
+                                        if (result.success) {
+                                            alert(result.message || 'Invitation canceled successfully');
+                                            loadPendingInvites();
+                                        } else {
+                                            alert(result.error || 'Failed to cancel invitation');
+                                        }
+                                    } catch (error) {
+                                        console.error('Error canceling invitation:', error);
+                                        alert('Failed to cancel invitation. Please try again.');
+                                    }
+                                }
+                            });
+                        });
+                    }
                     
                 } catch (error) {
                     console.error('Error loading pending invites:', error);
@@ -518,7 +592,7 @@
             }
             
             // Search functionality
-            searchMembers.addEventListener('input', (e) => {
+            searchMembers?.addEventListener('input', (e) => {
                 const searchTerm = e.target.value.toLowerCase();
                 const rows = teamMembersTable.querySelectorAll('tr');
                 
@@ -533,7 +607,7 @@
             });
             
             // Refresh invitations
-            refreshInvites.addEventListener('click', loadPendingInvites);
+            refreshInvites?.addEventListener('click', loadPendingInvites);
             
             // Load initial data
             loadTeamMembers();

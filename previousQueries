@@ -1,0 +1,666 @@
+now let's handle the team page fully below are the glimpses of how my database looks like
+
+
+create table organizations (
+    id uuid default uuid_generate_v4() primary key,
+    email text unique not null,
+    name text not null,
+    size text not null,
+    industry text not null,
+    created_at timestamp with time zone default timezone('utc'::text, now()) not null
+);
+
+-- Add RLS policies if needed
+alter table organizations enable row level security;
+
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Organizations table
+CREATE TABLE organizations (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    email TEXT UNIQUE NOT NULL,
+    org_name TEXT NOT NULL,
+    org_size TEXT NOT NULL,
+    industry TEXT NOT NULL,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Team members table
+CREATE TABLE team_members (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    org_id UUID REFERENCES organizations(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'member', 'viewer')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
+    invite_token UUID DEFAULT uuid_generate_v4(),
+    last_login TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Organization settings table (optional but recommended)
+CREATE TABLE organization_settings (
+    org_id UUID PRIMARY KEY REFERENCES organizations(id) ON DELETE CASCADE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    two_factor_required BOOLEAN DEFAULT false,
+    allowed_domains TEXT[] DEFAULT ARRAY[]::TEXT[],
+    custom_branding JSONB DEFAULT '{}'::jsonb,
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- Enable Row Level Security (RLS)
+ALTER TABLE organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE organization_settings ENABLE ROW LEVEL SECURITY;
+
+-- Create policies
+-- Organizations policies
+CREATE POLICY "Organizations are viewable by team members" ON organizations
+    FOR SELECT USING (
+        auth.uid() IN (
+            SELECT auth.uid() FROM team_members 
+            WHERE org_id = organizations.id
+        )
+    );
+
+CREATE POLICY "Organizations can be created by authenticated users" ON organizations
+    FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- Team members policies
+CREATE POLICY "Team members are viewable by organization members" ON team_members
+    FOR SELECT USING (
+        auth.uid() IN (
+            SELECT auth.uid() FROM team_members 
+            WHERE org_id = team_members.org_id
+        )
+    );
+
+CREATE POLICY "Team members can be added by organization admins" ON team_members
+    FOR INSERT WITH CHECK (
+        auth.uid() IN (
+            SELECT auth.uid() FROM team_members 
+            WHERE org_id = team_members.org_id 
+            AND role = 'admin'
+        )
+    );
+
+-- Create indexes for better performance
+CREATE INDEX idx_team_members_org_id ON team_members(org_id);
+CREATE INDEX idx_team_members_email ON team_members(email);
+CREATE INDEX idx_organizations_email ON organizations(email);
+
+-- Create functions for common operations
+CREATE OR REPLACE FUNCTION get_user_organizations(user_auth_id UUID)
+RETURNS TABLE (
+    org_id UUID,
+    org_name TEXT,
+    user_role TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.id,
+        o.org_name,
+        tm.role
+    FROM organizations o
+    JOIN team_members tm ON tm.org_id = o.id
+    WHERE tm.email = (
+        SELECT email FROM auth.users WHERE id = user_auth_id
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Add comments for documentation
+COMMENT ON TABLE organizations IS 'Organizations registered in the system';
+COMMENT ON TABLE team_members IS 'Team members belonging to organizations';
+COMMENT ON TABLE organization_settings IS 'Settings and configurations for organizations';
+
+-- Enable the uuid-ossp extension for UUID generation (if not already enabled)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- Create the team_members table
+CREATE TABLE IF NOT EXISTS public.team_members (
+    id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at timestamp with time zone DEFAULT timezone('utc', now()),
+    org_id uuid NOT NULL,
+    email text NOT NULL,
+    role text NOT NULL,
+    status text DEFAULT 'pending',
+    invite_token uuid DEFAULT uuid_generate_v4(),
+    last_login timestamp with time zone,
+    metadata jsonb DEFAULT '{}'::jsonb,
+    CONSTRAINT team_members_org_id_fkey FOREIGN KEY (org_id)
+        REFERENCES public.organizations (id) ON DELETE CASCADE,
+    CONSTRAINT team_members_role_check CHECK (
+        role = ANY (ARRAY['admin', 'member', 'viewer'])
+    ),
+    CONSTRAINT team_members_status_check CHECK (
+        status = ANY (ARRAY['pending', 'active', 'inactive'])
+    )
+) TABLESPACE pg_default;
+
+-- Create indexes for performance optimization
+CREATE INDEX IF NOT EXISTS idx_team_members_org_id
+    ON public.team_members USING btree (org_id)
+    TABLESPACE pg_default;
+
+CREATE INDEX IF NOT EXISTS idx_team_members_email
+    ON public.team_members USING btree (email)
+    TABLESPACE pg_default;
+
+-- Enable Row Level Security on the team_members table
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+
+-- Define RLS Policies
+
+-- 1. Policy: Allow SELECT access to team_members if the user is part of the organization
+CREATE POLICY "Select team_members for org members" ON public.team_members
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = team_members.org_id
+              AND tm.email = auth.email()
+              AND tm.status = 'active'
+        )
+    );
+
+-- 2. Policy: Allow INSERT access to team_members only if the user is an admin of the organization
+CREATE POLICY "Insert team_members by org admins" ON public.team_members
+    FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = team_members.org_id
+              AND tm.email = auth.email()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- 3. Policy: Allow UPDATE access only to the team member themselves or admins
+CREATE POLICY "Update team_members by self or admin" ON public.team_members
+    FOR UPDATE
+    USING (
+        team_members.email = auth.email()
+        OR EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = team_members.org_id
+              AND tm.email = auth.email()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    )
+    WITH CHECK (
+        team_members.email = auth.email()
+        OR EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = team_members.org_id
+              AND tm.email = auth.email()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- 4. Policy: Allow DELETE access only to admins
+CREATE POLICY "Delete team_members by admin" ON public.team_members
+    FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = team_members.org_id
+              AND tm.email = auth.email()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+
+    
+  
+
+  ALTER TABLE public.team_members DISABLE ROW LEVEL SECURITY;
+
+
+  --------------------------------------------------------------------------------
+-- 1. Enable Required Extensions
+--------------------------------------------------------------------------------
+
+-- Enable the uuid-ossp extension for UUID generation (if not already enabled)
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+--------------------------------------------------------------------------------
+-- 2. Create Tables
+--------------------------------------------------------------------------------
+
+-- 2.1. Organizations Table
+CREATE TABLE IF NOT EXISTS public.organizations (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
+    email TEXT UNIQUE NOT NULL,
+    org_name TEXT NOT NULL,
+    org_size TEXT NOT NULL,
+    industry TEXT NOT NULL,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+    metadata JSONB DEFAULT '{}'::jsonb
+);
+
+-- 2.2. Team Members Table
+CREATE TABLE IF NOT EXISTS public.team_members (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
+    org_id UUID NOT NULL,
+    user_id UUID NOT NULL, -- References auth.uid()
+    email TEXT NOT NULL,
+    role TEXT NOT NULL CHECK (role IN ('admin', 'member', 'viewer')),
+    status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'inactive')),
+    invite_token UUID DEFAULT uuid_generate_v4(),
+    last_login TIMESTAMP WITH TIME ZONE,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    CONSTRAINT team_members_org_id_fkey FOREIGN KEY (org_id)
+        REFERENCES public.organizations (id) ON DELETE CASCADE
+);
+
+-- 2.3. Organization Settings Table (Optional but Recommended)
+CREATE TABLE IF NOT EXISTS public.organization_settings (
+    org_id UUID PRIMARY KEY,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
+    two_factor_required BOOLEAN DEFAULT false,
+    allowed_domains TEXT[] DEFAULT ARRAY[]::TEXT[],
+    custom_branding JSONB DEFAULT '{}'::jsonb,
+    metadata JSONB DEFAULT '{}'::jsonb,
+    CONSTRAINT organization_settings_org_id_fkey FOREIGN KEY (org_id)
+        REFERENCES public.organizations (id) ON DELETE CASCADE
+);
+
+--------------------------------------------------------------------------------
+-- 3. Create Indexes for Performance Optimization
+--------------------------------------------------------------------------------
+
+-- 3.1. Organizations Table Indexes
+CREATE INDEX IF NOT EXISTS idx_organizations_email ON public.organizations(email);
+CREATE INDEX IF NOT EXISTS idx_organizations_org_name ON public.organizations(org_name);
+
+-- 3.2. Team Members Table Indexes
+CREATE INDEX IF NOT EXISTS idx_team_members_org_id ON public.team_members(org_id);
+CREATE INDEX IF NOT EXISTS idx_team_members_email ON public.team_members(email);
+CREATE INDEX IF NOT EXISTS idx_team_members_user_id ON public.team_members(user_id);
+
+-- 3.3. Organization Settings Table Indexes
+CREATE INDEX IF NOT EXISTS idx_org_settings_org_id ON public.organization_settings(org_id);
+
+--------------------------------------------------------------------------------
+-- 4. Enable Row-Level Security (RLS)
+--------------------------------------------------------------------------------
+
+ALTER TABLE public.organizations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.team_members ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.organization_settings ENABLE ROW LEVEL SECURITY;
+
+--------------------------------------------------------------------------------
+-- 5. Define Row-Level Security (RLS) Policies
+--------------------------------------------------------------------------------
+
+-- 5.1. Organizations Table Policies
+
+-- Policy 5.1.1: Allow SELECT access to organization members
+CREATE POLICY "Organizations Select Access for Members" ON public.organizations
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organizations.id
+              AND tm.user_id = auth.uid()
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.1.2: Allow INSERT access to authenticated users
+CREATE POLICY "Organizations Insert Access for Authenticated Users" ON public.organizations
+    FOR INSERT
+    WITH CHECK (
+        auth.role() = 'authenticated'
+    );
+
+-- Policy 5.1.3: Allow UPDATE access to organization admins
+CREATE POLICY "Organizations Update Access for Admins" ON public.organizations
+    FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organizations.id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organizations.id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.1.4: Allow DELETE access to super admins (Optional)
+-- Replace 'super_admin@example.com' with actual super admin emails or roles as needed
+CREATE POLICY "Organizations Delete Access for Super Admins" ON public.organizations
+    FOR DELETE
+    USING (
+        auth.email() = 'super_admin@example.com'
+    );
+
+--------------------------------------------------------------------------------
+-- 5.2. Team Members Table Policies
+
+-- Policy 5.2.1: Allow SELECT access to organization members
+CREATE POLICY "TeamMembers Select Access for Members" ON public.team_members
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.team_members.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.2.2: Allow INSERT access only to organization admins
+CREATE POLICY "TeamMembers Insert Access for Admins" ON public.team_members
+    FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.team_members.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.2.3: Allow UPDATE access to self or organization admins
+CREATE POLICY "TeamMembers Update Access for Self or Admins" ON public.team_members
+    FOR UPDATE
+    USING (
+        user_id = auth.uid()
+        OR EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.team_members.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    )
+    WITH CHECK (
+        user_id = auth.uid()
+        OR EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.team_members.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.2.4: Allow DELETE access only to organization admins
+CREATE POLICY "TeamMembers Delete Access for Admins" ON public.team_members
+    FOR DELETE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.team_members.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+--------------------------------------------------------------------------------
+-- 5.3. Organization Settings Table Policies
+
+-- Policy 5.3.1: Allow SELECT access to organization members
+CREATE POLICY "OrgSettings Select Access for Members" ON public.organization_settings
+    FOR SELECT
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organization_settings.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.3.2: Allow INSERT access to organization admins
+CREATE POLICY "OrgSettings Insert Access for Admins" ON public.organization_settings
+    FOR INSERT
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organization_settings.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.3.3: Allow UPDATE access to organization admins
+CREATE POLICY "OrgSettings Update Access for Admins" ON public.organization_settings
+    FOR UPDATE
+    USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organization_settings.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    )
+    WITH CHECK (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.organization_settings.org_id
+              AND tm.user_id = auth.uid()
+              AND tm.role = 'admin'
+              AND tm.status = 'active'
+        )
+    );
+
+-- Policy 5.3.4: Allow DELETE access to super admins (Optional)
+-- Replace 'super_admin@example.com' with actual super admin emails or roles as needed
+CREATE POLICY "OrgSettings Delete Access for Super Admins" ON public.organization_settings
+    FOR DELETE
+    USING (
+        auth.email() = 'super_admin@example.com'
+    );
+
+--------------------------------------------------------------------------------
+-- 6. Create Helper Functions (Optional)
+--------------------------------------------------------------------------------
+
+-- 6.1. Function to Get User Organizations
+CREATE OR REPLACE FUNCTION public.get_user_organizations(user_auth_id UUID)
+RETURNS TABLE (
+    org_id UUID,
+    org_name TEXT,
+    user_role TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        o.id,
+        o.org_name,
+        tm.role
+    FROM public.organizations o
+    JOIN public.team_members tm ON tm.org_id = o.id
+    WHERE tm.user_id = user_auth_id
+      AND tm.status = 'active';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- 6.2. Function to Validate Super Admins (Optional)
+-- This function checks if the user is a super admin. Update the condition as per your requirements.
+CREATE OR REPLACE FUNCTION public.is_super_admin(user_auth_id UUID)
+RETURNS BOOLEAN AS $$
+BEGIN
+    RETURN EXISTS (
+        SELECT 1 FROM public.team_members tm
+        WHERE tm.user_id = user_auth_id
+          AND tm.role = 'super_admin'
+          AND tm.status = 'active'
+    );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+--------------------------------------------------------------------------------
+-- 7. Add Comments for Documentation (Optional)
+--------------------------------------------------------------------------------
+
+COMMENT ON TABLE public.organizations IS 'Organizations registered in the system';
+COMMENT ON TABLE public.team_members IS 'Team members belonging to organizations';
+COMMENT ON TABLE public.organization_settings IS 'Settings and configurations for organizations';
+COMMENT ON FUNCTION public.get_user_organizations(UUID) IS 'Retrieves organizations associated with a given user along with their roles';
+COMMENT ON FUNCTION public.is_super_admin(UUID) IS 'Checks if a user is a super admin';
+
+
+
+-- 1. Drop Existing Policies to Prevent Conflicts
+DROP POLICY IF EXISTS "TeamMembers Select Access for Members" ON public.team_members;
+DROP POLICY IF EXISTS "TeamMembers Insert Access for Admins" ON public.team_members;
+DROP POLICY IF EXISTS "TeamMembers Update Access for Self or Admins" ON public.team_members;
+DROP POLICY IF EXISTS "TeamMembers Delete Access for Admins" ON public.team_members;
+
+-- 2. Create New RLS Policies Without Self-Referencing
+
+-- Policy: Allow SELECT if the user is the team member or an admin
+CREATE POLICY "TeamMembers Select Own and Admins" ON public.team_members
+    FOR SELECT
+    USING (
+        user_id = auth.uid() OR role = 'admin'
+    );
+
+-- Policy: Allow INSERT only by admins
+CREATE POLICY "TeamMembers Insert by Admins" ON public.team_members
+    FOR INSERT
+    WITH CHECK (
+        role = 'admin'
+    );
+
+-- Policy: Allow UPDATE if the user is the team member or an admin
+CREATE POLICY "TeamMembers Update Own or Admins" ON public.team_members
+    FOR UPDATE
+    USING (
+        user_id = auth.uid() OR role = 'admin'
+    )
+    WITH CHECK (
+        user_id = auth.uid() OR role = 'admin'
+    );
+
+-- Policy: Allow DELETE only by admins
+CREATE POLICY "TeamMembers Delete by Admins" ON public.team_members
+    FOR DELETE
+    USING (
+        role = 'admin'
+    );
+
+-- 1. Forms Table
+CREATE TABLE IF NOT EXISTS public.forms (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
+    org_id UUID NOT NULL,
+    created_by UUID NOT NULL, -- References auth.uid()
+    title TEXT NOT NULL,
+    description TEXT,
+    share_code TEXT UNIQUE NOT NULL,
+    status TEXT DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'archived')),
+    fields JSONB NOT NULL, -- Store form fields structure
+    metadata JSONB DEFAULT '{}'::jsonb,
+    CONSTRAINT forms_org_id_fkey FOREIGN KEY (org_id)
+        REFERENCES public.organizations (id) ON DELETE CASCADE
+);
+
+-- 2. Form Responses Table
+CREATE TABLE IF NOT EXISTS public.form_responses (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now()),
+    form_id UUID NOT NULL,
+    respondent_email TEXT,
+    responses JSONB NOT NULL, -- Store actual responses
+    metadata JSONB DEFAULT '{}'::jsonb,
+    CONSTRAINT form_responses_form_id_fkey FOREIGN KEY (form_id)
+        REFERENCES public.forms (id) ON DELETE CASCADE
+);
+
+-- Create necessary indexes
+CREATE INDEX IF NOT EXISTS idx_forms_org_id ON public.forms(org_id);
+CREATE INDEX IF NOT EXISTS idx_forms_share_code ON public.forms(share_code);
+CREATE INDEX IF NOT EXISTS idx_form_responses_form_id ON public.form_responses(form_id);
+
+-- Enable RLS
+ALTER TABLE public.forms ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.form_responses ENABLE ROW LEVEL SECURITY;
+
+-- RLS Policies for forms
+CREATE POLICY "Forms Select Access for Members" ON public.forms
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = public.forms.org_id
+            AND tm.user_id = auth.uid()
+            AND tm.status = 'active'
+        )
+    );
+
+-- RLS Policies for form responses
+CREATE POLICY "FormResponses Select Access for Members" ON public.form_responses
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM public.forms f
+            JOIN public.team_members tm ON tm.org_id = f.org_id
+            WHERE f.id = public.form_responses.form_id
+            AND tm.user_id = auth.uid()
+            AND tm.status = 'active'
+        )
+    );
+
+    -- Drop existing policies
+DROP POLICY IF EXISTS "Forms Insert Access for Members" ON public.forms;
+
+-- Create new insert policy
+CREATE POLICY "Forms Insert Access" ON public.forms
+FOR INSERT WITH CHECK (
+    -- Allow insert if user is authenticated
+    auth.uid() = created_by
+    AND (
+        -- Either org_id is null (personal form)
+        org_id IS NULL 
+        OR 
+        -- Or user is member of the org
+        EXISTS (
+            SELECT 1 FROM public.team_members tm
+            WHERE tm.org_id = forms.org_id
+            AND tm.user_id = auth.uid()
+            AND tm.status = 'active'
+        )
+    )
+);
+
+DROP POLICY IF EXISTS "Forms Insert Access" ON public.forms;
+
+CREATE POLICY "Forms Insert Access" ON public.forms
+FOR INSERT
+WITH CHECK (
+  auth.uid() = created_by
+  AND EXISTS (
+    SELECT 1 
+    FROM public.team_members tm
+    WHERE tm.org_id = forms.org_id
+      AND tm.user_id = auth.uid()
+      AND tm.status = 'active'
+  )
+);
