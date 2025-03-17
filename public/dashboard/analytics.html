@@ -255,10 +255,24 @@
             </div>
         </main>
     </div>
-
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>
     <script type="module" src="/public/js/dashboard/analytics.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script type="module">
+        import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
+        import { supabase } from '../../src/config/supabase.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize common dashboard elements
+            const session = await initializeDashboard();
+            if (!session) return;
+            
+            // Rest of analytics specific code
+            // ... existing code ...
+        });
+    </script>
     
     <!-- Ensure image and click handling is working correctly -->
     <script>

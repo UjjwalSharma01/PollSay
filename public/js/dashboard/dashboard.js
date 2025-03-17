@@ -1,19 +1,12 @@
 import { supabase } from '../../../src/config/supabase.js';
+import { initializeDashboard } from './dashboard-utils.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // Check if user is logged in
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) {
-    window.location.href = '/public/signin.html';
-    return;
-  }
+  // Initialize dashboard common elements
+  const session = await initializeDashboard();
+  if (!session) return;
 
   // DOM Elements
-  const userAvatar = document.getElementById('user-avatar');
-  const userDropdown = document.getElementById('user-dropdown');
-  const userName = document.getElementById('user-name');
-  const userEmail = document.getElementById('user-email');
-  const logoutBtn = document.getElementById('logout-btn');
   const createFormBtn = document.getElementById('create-form-btn');
   const encryptionBanner = document.getElementById('encryption-banner');
   const formsCount = document.getElementById('forms-count');
@@ -29,42 +22,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   const formLinkInput = document.getElementById('form-link');
   const copyLinkBtn = document.getElementById('copy-link-btn');
   const encryptionNotice = document.getElementById('encryption-notice');
-
-  // User dropdown toggle
-  if (userAvatar) {
-    userAvatar.addEventListener('click', () => {
-      userDropdown.classList.toggle('hidden');
-    });
-    
-    // Fix image URL to prevent ERR_NAME_NOT_RESOLVED
-    // Use a data URI for a placeholder avatar instead of an external URL
-    userAvatar.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' width='40' height='40'%3E%3Cpath fill='%23ccc' d='M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z'/%3E%3C/svg%3E";
-  }
-
-  // Close dropdown when clicking outside
-  document.addEventListener('click', (e) => {
-    if (userDropdown && !userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
-      userDropdown.classList.add('hidden');
-    }
-  });
-
-  // Set user info
-  if (session) {
-    if (userName) userName.textContent = session.user.user_metadata?.full_name || 'User';
-    if (userEmail) userEmail.textContent = session.user.email;
-  }
-
-  // Sign out handler
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      try {
-        await supabase.auth.signOut();
-        window.location.href = '/public/signin.html';
-      } catch (error) {
-        console.error('Error signing out:', error);
-      }
-    });
-  }
 
   // Create form button
   if (createFormBtn) {
@@ -561,7 +518,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Initialize dashboard with better error handling
-  async function initializeDashboard() {
+  async function initializeDashboardContent() {
     try {
       // Create promise array for parallel execution
       const promises = [
@@ -581,5 +538,5 @@ document.addEventListener('DOMContentLoaded', async () => {
   }
 
   // Start initialization
-  initializeDashboard();
+  initializeDashboardContent();
 });

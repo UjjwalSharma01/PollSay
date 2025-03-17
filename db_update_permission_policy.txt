@@ -1,0 +1,33 @@
+-- IMPORTANT: Execute all these commands to properly enable form submissions
+-- The key issue is that RLS is enabled but the INSERT policy is too restrictive
+
+-- First, make sure RLS is enabled on form_responses table
+ALTER TABLE public.form_responses ENABLE ROW LEVEL SECURITY;
+
+-- Drop any existing policies to avoid conflicts
+DROP POLICY IF EXISTS "FormResponses Insert Public" ON public.form_responses;
+DROP POLICY IF EXISTS "FormResponses Select for Creators" ON public.form_responses; 
+DROP POLICY IF EXISTS "Form Responses Insert Access" ON public.form_responses;
+DROP POLICY IF EXISTS "Form Responses Select Access" ON public.form_responses;
+
+-- Allow ANYONE to submit responses to forms (this is crucial)
+-- This policy uses 'true' which means no restrictions on INSERT
+CREATE POLICY "FormResponses Insert Public" ON public.form_responses 
+FOR INSERT WITH CHECK (true);
+
+-- Only allow form owners to view responses
+CREATE POLICY "FormResponses Select for Creators" ON public.form_responses
+FOR SELECT USING (EXISTS (
+  SELECT 1 FROM forms f
+  WHERE f.id = form_responses.form_id
+  AND f.created_by = auth.uid()
+));
+
+-- Explicitly grant permissions to the authenticated role
+GRANT SELECT, INSERT ON public.form_responses TO authenticated;
+GRANT SELECT, INSERT ON public.form_responses TO anon;
+
+-- Execute these commands and verify with:
+SELECT tablename, policyname, permissive, roles, cmd, qual, with_check 
+FROM pg_policies 
+WHERE tablename = 'form_responses';

@@ -1,0 +1,872 @@
+-- Create organization_keys table to store encryption keys
+CREATE TABLE IF NOT EXISTS public.organization_keys (
+  id UUID PRIMARY KEY REFERENCES organizations(id),
+  public_key JSONB NOT NULL,
+  encrypted_private_key TEXT NOT NULL,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
+);
+
+-- Create encrypted_responses table for end-to-end encrypted form submissions
+CREATE TABLE IF NOT EXISTS public.encrypted_responses (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  form_id UUID REFERENCES forms(id) NOT NULL,
+  encrypted_data TEXT NOT NULL, -- Stores E2E encrypted response data
+  respondent_email TEXT, -- Can be null for anonymous responses
+  respondent_pseudonym TEXT, -- Derived from email+org combo
+  show_real_name BOOLEAN DEFAULT false,
+  completion_time INTEGER, -- Unencrypted for analytics purposes
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT timezone('utc', now())
+);
+
+-- Add encrypted flag and key to forms table
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS encrypted BOOLEAN DEFAULT false;
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS encrypted_form_key TEXT;
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS encrypted_fields TEXT;
+
+-- Add indexes
+CREATE INDEX IF NOT EXISTS idx_org_keys_id ON organization_keys(id);
+CREATE INDEX IF NOT EXISTS idx_encrypted_responses_form_id ON encrypted_responses(form_id);
+
+-- Enable RLS
+ALTER TABLE public.organization_keys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.encrypted_responses ENABLE ROW LEVEL SECURITY;
+
+-- RLS policies for organization_keys
+CREATE POLICY "OrgKeys Select for Org Members" ON organization_keys
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM team_members tm
+      WHERE tm.org_id = organization_keys.id
+      AND tm.user_id = auth.uid()
+      AND tm.status = 'active'
+    )
+  );
+
+CREATE POLICY "OrgKeys Insert for Org Admins" ON organization_keys
+  FOR INSERT WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM team_members tm
+      WHERE tm.org_id = organization_keys.id
+      AND tm.user_id = auth.uid()
+      AND tm.role = 'admin'
+      AND tm.status = 'active'
+    )
+  );
+
+-- RLS policies for encrypted_responses
+CREATE POLICY "EncryptedResponses Select for Form Creators" ON encrypted_responses
+  FOR SELECT USING (
+    EXISTS (
+      SELECT 1 FROM forms f
+      WHERE f.id = encrypted_responses.form_id
+      AND f.created_by = auth.uid()
+    )
+  );
+
+CREATE POLICY "EncryptedResponses Insert for Anyone" ON encrypted_responses
+  FOR INSERT WITH CHECK (true);
+
+-- Function to get user's pseudonym based on email and organization
+CREATE OR REPLACE FUNCTION get_user_pseudonym(email TEXT, org_id UUID)
+RETURNS TEXT AS $$
+DECLARE
+  pseudo TEXT;
+BEGIN
+  -- Generate deterministic pseudonym from email and org_id
+  pseudo := encode(digest(email || org_id::text, 'sha256'), 'hex');
+  RETURN substring(pseudo from 1 for 8);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Enable RLS on forms table if not already enabled
+ALTER TABLE public.forms ENABLE ROW LEVEL SECURITY;
+
+-- RLS policies for forms table
+CREATE POLICY "Forms Select for Creators" ON forms
+  FOR SELECT USING (created_by = auth.uid());
+
+CREATE POLICY "Forms Insert for Authenticated Users" ON forms
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Forms Update for Creators" ON forms
+  FOR UPDATE USING (created_by = auth.uid());
+
+CREATE POLICY "Forms Delete for Creators" ON forms
+  FOR DELETE USING (created_by = auth.uid());
+
+-- new quwries
+
+-- Add default organization handling for forms
+-- First, check if org_id is nullable in forms table
+DO $$ 
+BEGIN
+  -- If org_id is required but users don't always have an organization,
+  -- we can make it nullable
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns 
+    WHERE table_name = 'forms' 
+    AND column_name = 'org_id' 
+    AND is_nullable = 'NO'
+  ) THEN
+    ALTER TABLE public.forms ALTER COLUMN org_id DROP NOT NULL;
+  END IF;
+END $$;
+
+-- Fix the trigger function to properly handle auth context
+CREATE OR REPLACE FUNCTION set_default_org_for_form()
+RETURNS TRIGGER AS $$
+DECLARE
+  user_id uuid;
+BEGIN
+  -- Get current user ID explicitly since auth.uid() might not work in all trigger contexts
+  user_id := auth.uid();
+  
+  -- Set the created_by field if not already set
+  IF NEW.created_by IS NULL THEN
+    NEW.created_by := user_id;
+  END IF;
+  
+  -- If org_id is not provided, try to get user's primary organization
+  IF NEW.org_id IS NULL THEN
+    -- Try to find a default/primary organization for the user
+    SELECT tm.org_id INTO NEW.org_id
+    FROM team_members tm
+    WHERE tm.user_id = user_id
+    AND tm.status = 'active'
+    ORDER BY tm.created_at ASC
+    LIMIT 1;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create the trigger if it doesn't exist
+DROP TRIGGER IF EXISTS set_form_org_trigger ON forms;
+CREATE TRIGGER set_form_org_trigger
+  BEFORE INSERT ON forms
+  FOR EACH ROW
+  EXECUTE FUNCTION set_default_org_for_form();
+
+-- Create a more permissive policy for form creation
+-- First remove any existing policies that might conflict
+DROP POLICY IF EXISTS "Forms Insert for Authenticated Users" ON forms;
+
+-- Create a more permissive policy for authenticated users
+CREATE POLICY "Forms Insert for Any Authenticated User" ON forms
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+-- Create a temporary bypass policy (you can remove this after debugging)
+CREATE POLICY "Forms Temporary All Access" ON forms
+  USING (true)
+  WITH CHECK (true);
+  
+-- Add function to check if forms is accessible
+CREATE OR REPLACE FUNCTION check_forms_access()
+RETURNS TABLE (
+  has_access boolean,
+  user_id uuid,
+  policies json
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    true as has_access,
+    auth.uid() as user_id,
+    (SELECT json_agg(row_to_json(p)) 
+     FROM pg_policies p 
+     WHERE p.tablename = 'forms') as policies;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Make org_id nullable in the forms table
+ALTER TABLE public.forms ALTER COLUMN org_id DROP NOT NULL;
+
+-- Drop the foreign key constraint if needed to recreate it
+ALTER TABLE public.forms DROP CONSTRAINT IF EXISTS forms_org_id_fkey;
+
+-- Add the constraint back but allow NULL values
+ALTER TABLE public.forms ADD CONSTRAINT forms_org_id_fkey 
+  FOREIGN KEY (org_id) REFERENCES organizations(id) DEFERRABLE INITIALLY DEFERRED;
+
+-- Create a simplified trigger for form creation
+CREATE OR REPLACE FUNCTION forms_before_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Always set the current user as creator
+  NEW.created_by := auth.uid();
+  
+  -- If no org provided, allow NULL
+  IF NEW.org_id IS NOT NULL THEN
+    -- Check if org exists
+    IF NOT EXISTS (SELECT 1 FROM organizations WHERE id = NEW.org_id) THEN
+      NEW.org_id := NULL;  -- Reset to NULL if invalid
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Apply the trigger
+DROP TRIGGER IF EXISTS forms_before_insert_trigger ON forms;
+CREATE TRIGGER forms_before_insert_trigger
+  BEFORE INSERT ON forms
+  FOR EACH ROW
+  EXECUTE FUNCTION forms_before_insert();
+
+-- Create unrestricted policy to allow form creation
+DROP POLICY IF EXISTS "Forms Insert Policy" ON forms;
+CREATE POLICY "Forms Insert Policy" ON forms
+  FOR INSERT TO authenticated
+  WITH CHECK (true);
+
+-- Disable all other policies temporarily to debug
+DROP POLICY IF EXISTS "Forms Temporary All Access" ON forms;
+CREATE POLICY "Forms Temporary All Access" ON forms
+  USING (true)
+  WITH CHECK (true);
+
+-- Drop conflicting policies first to avoid the "policy already exists" error
+DROP POLICY IF EXISTS "Forms Select for Creators" ON forms;
+DROP POLICY IF EXISTS "Forms Insert for Any Authenticated User" ON forms;
+DROP POLICY IF EXISTS "Forms Insert for Authenticated Users" ON forms;
+DROP POLICY IF EXISTS "Forms Update for Creators" ON forms;
+DROP POLICY IF EXISTS "Forms Delete for Creators" ON forms;
+DROP POLICY IF EXISTS "Forms Insert Policy" ON forms;
+DROP POLICY IF EXISTS "Forms Temporary All Access" ON forms;
+
+-- Add share_id column to forms table for public access links if not exists
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS share_id TEXT UNIQUE;
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS require_login BOOLEAN DEFAULT false;
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS allowed_emails TEXT[];
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS response_limit INTEGER DEFAULT NULL;
+
+-- Create index for faster form lookups by share_id
+CREATE INDEX IF NOT EXISTS idx_forms_share_id ON forms(share_id);
+
+-- Create a function to get form by share_id (accessible without auth)
+CREATE OR REPLACE FUNCTION get_form_by_share_id(p_share_id TEXT)
+RETURNS TABLE (
+  id UUID,
+  title TEXT,
+  description TEXT,
+  form_data JSONB,
+  require_login BOOLEAN,
+  created_by UUID,
+  created_at TIMESTAMP WITH TIME ZONE,
+  share_id TEXT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT 
+    f.id,
+    f.title,
+    f.description,
+    f.form_data,
+    f.require_login,
+    f.created_by,
+    f.created_at,
+    f.share_id
+  FROM forms f
+  WHERE f.share_id = p_share_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Fix forms_before_insert to also generate a random share_id
+CREATE OR REPLACE FUNCTION forms_before_insert()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Always set the current user as creator
+  NEW.created_by := auth.uid();
+  
+  -- Generate a random share_id if not provided
+  IF NEW.share_id IS NULL THEN
+    NEW.share_id := substr(md5(random()::text || clock_timestamp()::text), 1, 12);
+  END IF;
+  
+  -- If no org provided, allow NULL
+  IF NEW.org_id IS NOT NULL THEN
+    -- Check if org exists
+    IF NOT EXISTS (SELECT 1 FROM organizations WHERE id = NEW.org_id) THEN
+      NEW.org_id := NULL;  -- Reset to NULL if invalid
+    END IF;
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Apply the updated trigger
+DROP TRIGGER IF EXISTS forms_before_insert_trigger ON forms;
+CREATE TRIGGER forms_before_insert_trigger
+  BEFORE INSERT ON forms
+  FOR EACH ROW
+  EXECUTE FUNCTION forms_before_insert();
+
+-- Add email domain restriction columns to the forms table
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS allowed_domains TEXT[];
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS allow_all_emails BOOLEAN DEFAULT true;
+
+-- Function to check if a user can respond to a form
+DROP FUNCTION IF EXISTS can_respond_to_form(UUID, TEXT);
+CREATE OR REPLACE FUNCTION can_respond_to_form(form_id UUID, user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+  form_record RECORD;
+  response_count INTEGER;
+  email_domain TEXT;
+BEGIN
+  -- Get form details
+  SELECT * INTO form_record FROM forms WHERE id = form_id;
+  
+  -- Check if form exists
+  IF form_record IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- If form doesn't require login, anyone can respond
+  IF NOT form_record.require_login THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- If no email is provided but login is required, deny access
+  IF user_email IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- If all emails are allowed
+  IF form_record.allow_all_emails THEN
+    -- Check if there's a response limit
+    IF form_record.response_limit IS NOT NULL THEN
+      -- Count existing responses from this email
+      SELECT COUNT(*) INTO response_count 
+      FROM encrypted_responses 
+      WHERE encrypted_responses.form_id = form_id 
+        AND encrypted_responses.respondent_email = user_email;
+      
+      -- Allow response if under the limit
+      RETURN response_count < form_record.response_limit;
+    ELSE
+      -- No response limit
+      RETURN TRUE;
+    END IF;
+  END IF;
+  
+  -- Check if user's email is in the allowed list
+  IF form_record.allowed_emails IS NOT NULL AND array_length(form_record.allowed_emails, 1) > 0 THEN
+    IF user_email = ANY(form_record.allowed_emails) THEN
+      -- Check if there's a response limit
+      IF form_record.response_limit IS NOT NULL THEN
+        SELECT COUNT(*) INTO response_count 
+        FROM encrypted_responses 
+        WHERE encrypted_responses.form_id = form_id 
+          AND encrypted_responses.respondent_email = user_email;
+        
+        -- Allow response if under the limit
+        RETURN response_count < form_record.response_limit;
+      ELSE
+        -- No response limit
+        RETURN TRUE;
+      END IF;
+    END IF;
+  END IF;
+  
+  -- Check domain restrictions if applicable
+  IF form_record.allowed_domains IS NOT NULL AND array_length(form_record.allowed_domains, 1) > 0 THEN
+    -- Extract domain from email (part after @)
+    email_domain := substring(user_email from position('@' in user_email) + 1);
+    
+    -- Check if domain is allowed
+    IF email_domain = ANY(form_record.allowed_domains) THEN
+      -- Check if there's a response limit
+      IF form_record.response_limit IS NOT NULL THEN
+        SELECT COUNT(*) INTO response_count 
+        FROM encrypted_responses 
+        WHERE encrypted_responses.form_id = form_id 
+          AND encrypted_responses.respondent_email = user_email;
+        
+        -- Allow response if under the limit
+        RETURN response_count < form_record.response_limit;
+      ELSE
+        -- No response limit
+        RETURN TRUE;
+      END IF;
+    END IF;
+  END IF;
+  
+  -- Not allowed
+  RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a function to validate if an email is allowed to access a form
+CREATE OR REPLACE FUNCTION is_email_allowed_for_form(p_form_id UUID, p_email TEXT) 
+RETURNS BOOLEAN AS $$
+DECLARE
+  v_form RECORD;
+  v_domain TEXT;
+BEGIN
+  -- Get form settings
+  SELECT require_login, allowed_emails, allowed_domains, allow_all_emails 
+  INTO v_form
+  FROM forms
+  WHERE id = p_form_id;
+  
+  -- If form not found, return false
+  IF v_form IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- If login not required, anyone can access
+  IF NOT v_form.require_login THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- If email not provided but login required, deny access
+  IF p_email IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  -- If all emails are allowed
+  IF v_form.allow_all_emails THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- Check specific allowed emails
+  IF v_form.allowed_emails IS NOT NULL AND 
+     p_email = ANY(v_form.allowed_emails) THEN
+    RETURN TRUE;
+  END IF;
+  
+  -- Check allowed domains
+  IF v_form.allowed_domains IS NOT NULL AND array_length(v_form.allowed_domains, 1) > 0 THEN
+    -- Extract domain from email
+    v_domain := substring(p_email from position('@' in p_email) + 1);
+    
+    IF v_domain = ANY(v_form.allowed_domains) THEN
+      RETURN TRUE;
+    END IF;
+  END IF;
+  
+  -- Not allowed
+  RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Drop ALL potentially conflicting policies before recreating them
+DROP POLICY IF EXISTS "FormsSelectByCreator" ON forms;
+DROP POLICY IF EXISTS "FormsSelectByShareId" ON forms;
+DROP POLICY IF EXISTS "FormsInsertAuth" ON forms;
+DROP POLICY IF EXISTS "FormsUpdateByCreator" ON forms;
+DROP POLICY IF EXISTS "FormsDeleteByCreator" ON forms;
+
+-- Now create the policies
+CREATE POLICY "FormsSelectByCreator" ON forms
+  FOR SELECT USING (created_by = auth.uid());
+
+CREATE POLICY "FormsSelectByShareId" ON forms
+  FOR SELECT USING (true);
+
+CREATE POLICY "FormsInsertAuth" ON forms
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "FormsUpdateByCreator" ON forms
+  FOR UPDATE USING (created_by = auth.uid());
+
+CREATE POLICY "FormsDeleteByCreator" ON forms
+  FOR DELETE USING (created_by = auth.uid());
+
+-- Drop policies with ambiguous references
+DROP POLICY IF EXISTS "TeamMembers Update Access for Self or Admins" ON public.team_members;
+DROP POLICY IF EXISTS "TeamMembers Select Own and Admins" ON public.team_members;
+DROP POLICY IF EXISTS "TeamMembers Update Own or Admins" ON public.team_members;
+
+-- Create corrected policies with explicit table references
+CREATE POLICY "TeamMembers Update Access for Self or Admins" ON public.team_members 
+FOR UPDATE USING (
+  public.team_members.user_id = auth.uid() 
+  OR EXISTS (
+    SELECT 1 
+    FROM public.team_members tm 
+    WHERE tm.org_id = public.team_members.org_id 
+    AND tm.user_id = auth.uid() 
+    AND tm.role = 'admin' 
+    AND tm.status = 'active'
+  )
+) WITH CHECK (
+  public.team_members.user_id = auth.uid() 
+  OR EXISTS (
+    SELECT 1 
+    FROM public.team_members tm 
+    WHERE tm.org_id = public.team_members.org_id 
+    AND tm.user_id = auth.uid() 
+    AND tm.role = 'admin' 
+    AND tm.status = 'active'
+  )
+);
+
+-- Fix the other potentially ambiguous policies
+CREATE POLICY "TeamMembers Select Own and Admins" ON public.team_members 
+FOR SELECT USING (
+  public.team_members.user_id = auth.uid() 
+  OR public.team_members.role = 'admin'
+);
+
+CREATE POLICY "TeamMembers Update Own or Admins" ON public.team_members 
+FOR UPDATE USING (
+  public.team_members.user_id = auth.uid() 
+  OR public.team_members.role = 'admin'
+) WITH CHECK (
+  public.team_members.user_id = auth.uid() 
+  OR public.team_members.role = 'admin'
+);
+
+-- Fix Forms Insert Access policy for clarity and to avoid potential issues
+DROP POLICY IF EXISTS "Forms Insert Access" ON public.forms;
+
+CREATE POLICY "Forms Insert Access" ON public.forms 
+FOR INSERT WITH CHECK (
+  auth.uid() = public.forms.created_by 
+  AND EXISTS (
+    SELECT 1 
+    FROM public.team_members tm 
+    WHERE tm.org_id = public.forms.org_id 
+    AND tm.user_id = auth.uid() 
+    AND tm.status = 'active'
+  )
+);
+
+-- Corrected TeamMembers policies to remove ambiguous qualification:
+DROP POLICY IF EXISTS "TeamMembers Update Access for Self or Admins" ON public.team_members;
+CREATE POLICY "TeamMembers Update Access for Self or Admins" ON public.team_members 
+FOR UPDATE USING (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 
+    FROM public.team_members tm 
+    WHERE tm.org_id = org_id
+      AND tm.user_id = auth.uid()
+      AND tm.role = 'admin'
+      AND tm.status = 'active'
+  )
+) WITH CHECK (
+  user_id = auth.uid()
+  OR EXISTS (
+    SELECT 1 
+    FROM public.team_members tm 
+    WHERE tm.org_id = org_id
+      AND tm.user_id = auth.uid()
+      AND tm.role = 'admin'
+      AND tm.status = 'active'
+  )
+);
+
+DROP POLICY IF EXISTS "TeamMembers Select Own and Admins" ON public.team_members;
+CREATE POLICY "TeamMembers Select Own and Admins" ON public.team_members 
+FOR SELECT USING (
+  user_id = auth.uid() 
+  OR role = 'admin'
+);
+
+DROP POLICY IF EXISTS "TeamMembers Update Own or Admins" ON public.team_members;
+CREATE POLICY "TeamMembers Update Own or Admins" ON public.team_members 
+FOR UPDATE USING (
+  user_id = auth.uid() 
+  OR role = 'admin'
+) WITH CHECK (
+  user_id = auth.uid() 
+  OR role = 'admin'
+);
+
+-- Fix ambiguous column references in can_respond_to_form function:
+DROP FUNCTION IF EXISTS can_respond_to_form(UUID, TEXT);
+CREATE OR REPLACE FUNCTION can_respond_to_form(form_id UUID, user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+  form_record RECORD;
+  response_count INTEGER;
+  email_domain TEXT;
+BEGIN
+  SELECT * INTO form_record FROM forms WHERE id = form_id;
+  
+  IF form_record IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  IF NOT form_record.require_login THEN
+    RETURN TRUE;
+  END IF;
+  
+  IF user_email IS NULL THEN
+    RETURN FALSE;
+  END IF;
+  
+  IF form_record.allow_all_emails THEN
+    IF form_record.response_limit IS NOT NULL THEN
+      SELECT COUNT(*) INTO response_count 
+      FROM encrypted_responses 
+      WHERE encrypted_responses.form_id = form_id 
+        AND encrypted_responses.respondent_email = user_email;
+      RETURN response_count < form_record.response_limit;
+    ELSE
+      RETURN TRUE;
+    END IF;
+  END IF;
+  
+  IF form_record.allowed_emails IS NOT NULL AND array_length(form_record.allowed_emails, 1) > 0 THEN
+    IF user_email = ANY(form_record.allowed_emails) THEN
+      IF form_record.response_limit IS NOT NULL THEN
+        SELECT COUNT(*) INTO response_count 
+        FROM encrypted_responses 
+        WHERE encrypted_responses.form_id = form_id 
+          AND encrypted_responses.respondent_email = user_email;
+        RETURN response_count < form_record.response_limit;
+      ELSE
+        RETURN TRUE;
+      END IF;
+    END IF;
+  END IF;
+  
+  IF form_record.allowed_domains IS NOT NULL AND array_length(form_record.allowed_domains, 1) > 0 THEN
+    email_domain := substring(user_email from position('@' in user_email) + 1);
+    IF email_domain = ANY(form_record.allowed_domains) THEN
+      IF form_record.response_limit IS NOT NULL THEN
+        SELECT COUNT(*) INTO response_count 
+        FROM encrypted_responses 
+        WHERE encrypted_responses.form_id = form_id 
+          AND encrypted_responses.respondent_email = user_email;
+        RETURN response_count < form_record.response_limit;
+      ELSE
+        RETURN TRUE;
+      END IF;
+    END IF;
+  END IF;
+  
+  RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- CLEAR ALL POLICIES THAT MIGHT BE CAUSING CONFLICTS
+DO $$
+BEGIN
+    -- Drop all policies from team_members table
+    DROP POLICY IF EXISTS "TeamMembers Update Access for Self or Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Select Own and Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Update Own or Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Update Access for Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Insert by Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Delete by Admins" ON public.team_members;
+    
+    -- Drop any other policies that might conflict
+    DROP POLICY IF EXISTS "TeamMembers Select Access for Members" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Insert Access for Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Update Access for Self or Admins" ON public.team_members;
+    DROP POLICY IF EXISTS "TeamMembers Delete Access for Admins" ON public.team_members;
+END;
+$$;
+
+-- CREATE SIMPLE, CLEAN POLICIES FOR TEAM_MEMBERS TABLE
+-- Using aliases consistently and avoiding any ambiguous references
+
+-- Policy: Allow team members to select their own record or if they are admins
+CREATE POLICY "tm_select_policy" ON public.team_members
+FOR SELECT USING (
+    -- User can see their own record
+    (auth.uid() = user_id)
+    OR 
+    -- Or user is an admin in the same org
+    EXISTS (
+        SELECT 1 
+        FROM public.team_members AS admins
+        WHERE admins.user_id = auth.uid()
+        AND admins.role = 'admin'
+        AND admins.status = 'active'
+        AND admins.org_id = team_members.org_id
+    )
+);
+
+-- Policy: Allow users to update their own record, or admins to update any record in their org
+CREATE POLICY "tm_update_policy" ON public.team_members
+FOR UPDATE USING (
+    -- User can update their own record
+    (auth.uid() = user_id)
+    OR 
+    -- Or user is an admin in the same org
+    EXISTS (
+        SELECT 1 
+        FROM public.team_members AS admins
+        WHERE admins.user_id = auth.uid()
+        AND admins.role = 'admin'
+        AND admins.status = 'active'
+        AND admins.org_id = team_members.org_id
+    )
+) WITH CHECK (
+    -- Same conditions for the new values
+    (auth.uid() = user_id)
+    OR 
+    EXISTS (
+        SELECT 1 
+        FROM public.team_members AS admins
+        WHERE admins.user_id = auth.uid()
+        AND admins.role = 'admin'
+        AND admins.status = 'active'
+        AND admins.org_id = team_members.org_id
+    )
+);
+
+-- Policy: Allow only admins to insert new team members
+CREATE POLICY "tm_insert_policy" ON public.team_members
+FOR INSERT WITH CHECK (
+    EXISTS (
+        SELECT 1 
+        FROM public.team_members AS admins
+        WHERE admins.user_id = auth.uid()
+        AND admins.role = 'admin'
+        AND admins.status = 'active'
+        AND admins.org_id = team_members.org_id
+    )
+);
+
+-- Policy: Allow only admins to delete team members
+CREATE POLICY "tm_delete_policy" ON public.team_members
+FOR DELETE USING (
+    EXISTS (
+        SELECT 1 
+        FROM public.team_members AS admins
+        WHERE admins.user_id = auth.uid()
+        AND admins.role = 'admin'
+        AND admins.status = 'active'
+        AND admins.org_id = team_members.org_id
+    )
+);
+
+-- Fix the default org function to avoid ambiguous references
+CREATE OR REPLACE FUNCTION set_default_org_for_form()
+RETURNS TRIGGER AS $$
+DECLARE
+    v_auth_id uuid;
+BEGIN
+    -- Get current user ID explicitly
+    v_auth_id := auth.uid();
+    
+    -- Set the created_by field if not already set
+    IF NEW.created_by IS NULL THEN
+        NEW.created_by := v_auth_id;
+    END IF;
+    
+    -- If org_id is not provided, try to get user's primary organization
+    IF NEW.org_id IS NULL THEN
+        -- Try to find a default/primary organization for the user
+        SELECT tm.org_id INTO NEW.org_id
+        FROM team_members AS tm
+        WHERE tm.user_id = v_auth_id
+        AND tm.status = 'active'
+        ORDER BY tm.created_at ASC
+        LIMIT 1;
+    END IF;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Fix Forms Insert Access policy to avoid ambiguity
+DROP POLICY IF EXISTS "Forms Insert Access" ON public.forms;
+CREATE POLICY "Forms Insert Access" ON public.forms 
+FOR INSERT WITH CHECK (
+  auth.uid() = created_by 
+  AND (
+    org_id IS NULL
+    OR EXISTS (
+      SELECT 1 
+      FROM public.team_members AS tm 
+      WHERE tm.org_id = forms.org_id 
+      AND tm.user_id = auth.uid() 
+      AND tm.status = 'active'
+    )
+  )
+);
+
+-- Fix the can_respond_to_form function - using explicit paramater names to avoid confusing PostgreSQL
+DROP FUNCTION IF EXISTS can_respond_to_form(UUID, TEXT);
+CREATE OR REPLACE FUNCTION can_respond_to_form(p_form_id UUID, p_user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_form RECORD;
+    v_response_count INTEGER;
+    v_email_domain TEXT;
+BEGIN
+    -- Get form details with clear aliases
+    SELECT * INTO v_form 
+    FROM forms 
+    WHERE id = p_form_id;
+    
+    -- Form existence check
+    IF v_form IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- Login requirement check
+    IF NOT v_form.require_login THEN
+        RETURN TRUE;
+    END IF;
+    
+    -- Email provided check
+    IF p_user_email IS NULL THEN
+        RETURN FALSE;
+    END IF;
+    
+    -- All emails allowed check
+    IF v_form.allow_all_emails THEN
+        IF v_form.response_limit IS NOT NULL THEN
+            SELECT COUNT(*) INTO v_response_count 
+            FROM encrypted_responses AS er
+            WHERE er.form_id = p_form_id 
+            AND er.respondent_email = p_user_email;
+            
+            RETURN v_response_count < v_form.response_limit;
+        ELSE
+            RETURN TRUE;
+        END IF;
+    END IF;
+    
+    -- Specific emails check
+    IF v_form.allowed_emails IS NOT NULL AND array_length(v_form.allowed_emails, 1) > 0 THEN
+        IF p_user_email = ANY(v_form.allowed_emails) THEN
+            IF v_form.response_limit IS NOT NULL THEN
+                SELECT COUNT(*) INTO v_response_count 
+                FROM encrypted_responses AS er
+                WHERE er.form_id = p_form_id 
+                AND er.respondent_email = p_user_email;
+                
+                RETURN v_response_count < v_form.response_limit;
+            ELSE
+                RETURN TRUE;
+            END IF;
+        END IF;
+    END IF;
+    
+    -- Domain check
+    IF v_form.allowed_domains IS NOT NULL AND array_length(v_form.allowed_domains, 1) > 0 THEN
+        v_email_domain := substring(p_user_email from position('@' in p_user_email) + 1);
+        
+        IF v_email_domain = ANY(v_form.allowed_domains) THEN
+            IF v_form.response_limit IS NOT NULL THEN
+                SELECT COUNT(*) INTO v_response_count 
+                FROM encrypted_responses AS er
+                WHERE er.form_id = p_form_id 
+                AND er.respondent_email = p_user_email;
+                
+                RETURN v_response_count < v_form.response_limit;
+            ELSE
+                RETURN TRUE;
+            END IF;
+        END IF;
+    END IF;
+    
+    -- Not allowed
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+

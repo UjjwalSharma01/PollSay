@@ -379,10 +379,24 @@
             </div>
         </main>
     </div>
-
-    <!-- JavaScript for tab functionality -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="/src/config/supabase.js"></script>
-    <script type="module" src="settings.js"></script>
+    
+    <script type="module">
+        import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
+        import { supabase } from '../../src/config/supabase.js';
+        import { setupNavigationHandlers, enforceClickability } from '../js/navigation.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize common dashboard elements
+            const session = await initializeDashboard();
+            if (!session) return;
+            
+            // Set up navigation handlers
+            setupNavigationHandlers();
+            enforceClickability();
+            
+            // Add code for tab handling, form submissions etc.
+            // ... (rest of settings specific code)
+        });
+    </script>
 </body>
 </html>

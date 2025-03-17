@@ -192,7 +192,7 @@
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-6">
                     <div class="md:col-span-3">
                         <h2 class="text-xl font-semibold mb-4">Recent Activity</h2>
-                        <div class="dashboard-card h-[400px] overflow-y-auto">
+                        <div class="dashboard-card">
                             <ul id="activity-list" class="divide-y divide-mid">
                                 <li class="flex items-start p-4">
                                     <div class="rounded-full w-8 h-8 bg-primary/20 text-primary flex items-center justify-center mr-3 flex-shrink-0">
@@ -209,7 +209,7 @@
                     <!-- Security Tips -->
                     <div class="md:col-span-2">
                         <h2 class="text-xl font-semibold mb-4">Security Tips</h2>
-                        <div class="dashboard-card h-[400px] overflow-y-auto">
+                        <div class="dashboard-card">
                             <div class="p-4">
                                 <h3 class="font-medium mb-2 flex items-center">
                                     <i class="fas fa-key text-secondary mr-2"></i>
@@ -309,6 +309,21 @@
         
         document.getElementById('dismiss-error')?.addEventListener('click', function() {
             document.getElementById('connection-error').classList.add('hidden');
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+    <script type="module">
+        import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
+        import { supabase } from '../../src/config/supabase.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize common dashboard elements
+            const session = await initializeDashboard();
+            if (!session) return;
+            
+            // Rest of dashboard specific code
+            // ... existing code ...
         });
     </script>
 </body>
