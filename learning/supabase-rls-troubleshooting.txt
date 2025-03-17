@@ -1,0 +1,7 @@
+# Common Errors and Their Solutions in PollSay
+
+## 1. Variable Scope Errors
+
+### Error: `ReferenceError: userProfile is not defined`
+
+**Error Message:**

@@ -1,7 +1,19 @@
 import { supabase } from '../../../src/config/supabase.js';
 import { setupNavigationHandlers, enforceClickability } from '../navigation.js';
 
+// Add warning that this is a duplicate file
+console.error('********** WARNING: LOADING DEPRECATED SETTINGS.JS FROM /public/js/dashboard/settings.js **********');
+console.error('This file should be removed. Use /public/dashboard/settings.js instead.');
+
+// Check what methods are available in supabase.auth
+console.log('Available methods in supabase.auth:', Object.keys(supabase.auth));
+console.log('Is supabase.auth.user a function?', typeof supabase.auth.user === 'function');
+
+// Add more debugging
 document.addEventListener('DOMContentLoaded', async () => {
+    console.log('DOMContentLoaded in duplicate settings.js');
+    // Check if the problematic code exists in this file
+
     // Initialize navigation and enforce clickability
     setupNavigationHandlers();
     enforceClickability();

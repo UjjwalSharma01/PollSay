@@ -1,3 +1,7 @@
+// This is a duplicate file with an incorrect path.
+// You should use the main navigation.js file at /workspaces/PollSay/public/js/navigation.js instead.
+// This file can be safely deleted, but for reference we're keeping its content updated to match the main file.
+
 /**
  * Sets up navigation handlers for sidebar and common UI elements
  */
