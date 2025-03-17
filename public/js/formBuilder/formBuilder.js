@@ -153,7 +153,22 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
 
-        return { title, description, fields };
+        // Collect participation restrictions values
+        const allowedDomain = document.getElementById('allowed-domain').value.trim();
+        const invitedEmailsRaw = document.getElementById('invited-emails').value.trim();
+        const invitedEmails = invitedEmailsRaw ? invitedEmailsRaw.split(',').map(email => email.trim()).filter(email => email) : [];
+
+        const formData = {
+            title,
+            description,
+            fields,
+            // add new properties for participation restrictions
+            allowed_domain: allowedDomain || null,
+            invited_emails: invitedEmails.length ? invitedEmails : null
+        };
+
+        console.log('Collected form data with restrictions:', formData);
+        return formData;
     }
 
     // Show Preview Modal
