@@ -1,17 +1,100 @@
 import { supabase } from '../../../src/config/supabase.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const formFields = document.getElementById('form-fields');
-    const addFieldBtn = document.getElementById('add-field-btn');
-    const fieldMenu = document.getElementById('field-menu');
-    const saveFormBtn = document.createElement('button');
+    // Add dynamic styles for animations and better UX
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+        .field-entrance {
+            animation: slideDown 0.3s ease-out forwards;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        
+        .field-exit {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        .option-entrance {
+            animation: fadeIn 0.3s ease-out forwards;
+            opacity: 0;
+        }
+        
+        .option-exit {
+            animation: fadeOut 0.3s ease-out forwards;
+        }
+        
+        @keyframes slideDown {
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            to {
+                opacity: 1;
+            }
+        }
+        
+        @keyframes fadeOut {
+            to {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+        }
+        
+        .field-wrapper {
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .field-wrapper:hover {
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            border-color: var(--primary-color, #4f46e5);
+        }
+        
+        .required-toggle.is-required {
+            background-color: rgba(79, 70, 229, 0.1);
+            border: 1px solid rgba(79, 70, 229, 0.3);
+        }
+        
+        .required-status {
+            font-size: 0.7rem;
+            margin-left: 0.25rem;
+        }
+        
+        .add-option-btn:hover {
+            transform: translateY(-1px);
+        }
+        
+        .option-item {
+            border-left: 2px solid transparent;
+            padding-left: 5px;
+            transition: all 0.2s ease;
+        }
+        
+        .option-item:hover {
+            border-left-color: var(--primary-color, #4f46e5);
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+    `;
+    document.head.appendChild(styleEl);
 
-    // Initialize save button
-    saveFormBtn.id = 'save-form-btn';
-    saveFormBtn.textContent = 'Save Form';
-    saveFormBtn.className = 'bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-opacity-90 transition-colors flex items-center mt-4';
-    saveFormBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Form';
-    addFieldBtn.parentElement.appendChild(saveFormBtn);
+    const formFields = document.getElementById('form-fields');
+    // Fix the ID to match what's in the HTML
+    const addFieldBtn = document.getElementById('add-field');
+    // Define fieldMenu correctly based on the HTML structure
+    const fieldMenu = document.querySelector('.dropdown-content');
+    const saveFormBtn = document.getElementById('save-form');  // Use existing save button
+
+    // Remove the code that tries to create and append another save button
+    // No need for this code since the save button already exists in HTML:
+    // saveFormBtn.id = 'save-form-btn';
+    // saveFormBtn.textContent = 'Save Form';  
+    // saveFormBtn.className = '...';
+    // saveFormBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Form';
+    // addFieldBtn.parentElement.appendChild(saveFormBtn);
 
     // Toggle field menu
     addFieldBtn.addEventListener('click', (e) => {
@@ -28,40 +111,179 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Handle field type selection
-    document.querySelectorAll('.field-type-btn').forEach(btn => {
+    document.querySelectorAll('[data-type]').forEach(btn => {
         btn.addEventListener('click', () => {
             const fieldType = btn.dataset.type;
-            addField(fieldType);
+            // Normalize field types to ensure consistency
+            const normalizedType = normalizeFieldType(fieldType);
+            addField(normalizedType);
             fieldMenu.classList.add('hidden');
         });
     });
 
+    // Normalize field types to ensure consistency with response handler
+    function normalizeFieldType(type) {
+        const typeMap = {
+            'textarea': 'long-text',
+            'text': 'short-text',
+            'radio': 'multiple-choice',
+            'multiple': 'multiple-choice'
+        };
+        return typeMap[type] || type;
+    }
+
     // Add new field
     function addField(type) {
-        const template = document.getElementById(`${type}-template`);
-        if (!template) return;
+        console.log(`Trying to add field of type: ${type}`);
+        const normalizedType = normalizeFieldType(type);
+        const template = document.getElementById(`${normalizedType}-template`);
+        
+        if (!template) {
+            console.warn(`Template with id "${normalizedType}-template" not found. Creating a default field.`);
+            createDefaultField(normalizedType);
+            return;
+        }
 
         const clone = template.content.cloneNode(true);
         formFields.appendChild(clone);
 
         const newField = formFields.lastElementChild;
+        
+        // Add entrance animation
+        newField.classList.add('field-entrance');
+        setTimeout(() => newField.classList.remove('field-entrance'), 500);
+        
+        console.log('New field added:', newField);
         attachFieldEvents(newField);
+    }
+
+    // Create a default field if template is missing
+    function createDefaultField(type) {
+        const defaultFieldHTML = `
+            <div class="field-wrapper p-4 mb-4 bg-mid/30 backdrop-blur-sm rounded-lg border border-mid/50 shadow-lg field-entrance">
+                <div class="flex justify-between mb-2">
+                    <input type="text" class="w-full bg-transparent border-b border-mid focus:outline-none focus:border-primary text-lg text-textColor transition-all duration-300" placeholder="Question">
+                    <div class="flex space-x-2">
+                        <button type="button" class="required-toggle p-2 rounded-full hover:bg-mid/50 transition-all duration-300 flex items-center" title="Toggle required">
+                            <i class="fas fa-asterisk"></i>
+                            <span class="required-status">Optional</span>
+                        </button>
+                        <button type="button" class="duplicate-field p-2 rounded-full hover:bg-mid/50 transition-all duration-300" title="Duplicate">
+                            <i class="fas fa-clone"></i>
+                        </button>
+                        <button type="button" class="delete-field p-2 rounded-full hover:bg-mid/50 transition-all duration-300" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+                <input type="text" class="w-full bg-transparent border-b border-mid focus:outline-none focus:border-primary text-sm text-light transition-all duration-300" placeholder="Help text (optional)">
+                ${getTypeSpecificHTML(type)}
+            </div>
+        `;
+        
+        const tempContainer = document.createElement('div');
+        tempContainer.innerHTML = defaultFieldHTML;
+        const defaultField = tempContainer.firstElementChild;
+        
+        formFields.appendChild(defaultField);
+        attachFieldEvents(defaultField);
+    }
+
+    // Get specific HTML based on field type
+    function getTypeSpecificHTML(type) {
+        const normalizedType = normalizeFieldType(type);
+        
+        switch (normalizedType) {
+            case 'short-text':
+                return `<div class="mt-3">
+                    <input type="text" class="w-full bg-mid/50 border border-mid rounded-lg mt-2 p-2 text-textColor focus:ring-2 focus:ring-primary/50 transition-all duration-300" disabled placeholder="Short text answer">
+                </div>`;
+                
+            case 'long-text':
+                return `<div class="mt-3">
+                    <textarea class="w-full bg-mid/50 border border-mid rounded-lg mt-2 p-2 text-textColor h-24 focus:ring-2 focus:ring-primary/50 transition-all duration-300" disabled placeholder="Long text answer"></textarea>
+                </div>`;
+                
+            case 'multiple-choice':
+                return `
+                    <div class="mt-3">
+                        <div class="options-container space-y-2">
+                            <div class="option-item flex items-center space-x-2 option-entrance">
+                                <span class="text-primary"><i class="fas fa-circle-dot"></i></span>
+                                <input type="text" class="option-input w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-textColor transition-all duration-300" placeholder="Option">
+                                <button class="remove-option text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-mid/50 transition-all duration-300">
+                                    <i class="fas fa-minus-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn multiple-choice mt-2 text-primary hover:text-primary-dark px-3 py-1 rounded-lg border border-primary/20 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300">
+                            <i class="fas fa-plus-circle mr-1"></i> Add option
+                        </button>
+                    </div>
+                `;
+                
+            case 'checkbox':
+                return `
+                    <div class="mt-3">
+                        <div class="options-container space-y-2">
+                            <div class="option-item flex items-center space-x-2 option-entrance">
+                                <span class="text-primary"><i class="fas fa-square-check"></i></span>
+                                <input type="text" class="option-input w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-textColor transition-all duration-300" placeholder="Option">
+                                <button class="remove-option text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-mid/50 transition-all duration-300">
+                                    <i class="fas fa-minus-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="button" class="add-option-btn checkbox mt-2 text-primary hover:text-primary-dark px-3 py-1 rounded-lg border border-primary/20 hover:border-primary/50 hover:bg-primary/10 transition-all duration-300">
+                            <i class="fas fa-plus-circle mr-1"></i> Add option
+                        </button>
+                    </div>
+                `;
+                
+            default:
+                console.error(`Unknown field type: ${type} (normalized to: ${normalizedType})`);
+                // Default to short text if type is unrecognized
+                return getTypeSpecificHTML('short-text');
+        }
     }
 
     // Attach events to a field
     function attachFieldEvents(field) {
-        field.querySelector('.required-toggle')?.addEventListener('click', (e) => {
-            e.currentTarget.classList.toggle('text-primary');
-        });
+        const requiredToggle = field.querySelector('.required-toggle');
+        if (requiredToggle) {
+            const requiredStatus = requiredToggle.querySelector('.required-status') || 
+                                  document.createElement('span');
+            
+            if (!requiredToggle.querySelector('.required-status')) {
+                requiredStatus.className = 'required-status';
+                requiredStatus.textContent = 'Optional';
+                requiredToggle.appendChild(requiredStatus);
+            }
+            
+            requiredToggle.addEventListener('click', (e) => {
+                e.currentTarget.classList.toggle('text-primary');
+                e.currentTarget.classList.toggle('is-required');
+                
+                const isRequired = e.currentTarget.classList.contains('text-primary');
+                requiredStatus.textContent = isRequired ? 'Required' : 'Optional';
+            });
+        }
 
         field.querySelector('.duplicate-field')?.addEventListener('click', () => {
             const duplicate = field.cloneNode(true);
-            attachFieldEvents(duplicate);
             formFields.appendChild(duplicate);
+            
+            // Add entrance animation
+            duplicate.classList.add('field-entrance');
+            setTimeout(() => duplicate.classList.remove('field-entrance'), 500);
+            
+            attachFieldEvents(duplicate);
         });
 
         field.querySelector('.delete-field')?.addEventListener('click', () => {
-            field.remove();
+            // Add exit animation
+            field.classList.add('field-exit');
+            setTimeout(() => field.remove(), 300);
         });
 
         const addOptionBtn = field.querySelector('.add-option-btn');
@@ -69,10 +291,10 @@ document.addEventListener('DOMContentLoaded', () => {
             addOptionBtn.addEventListener('click', () => {
                 const optionsContainer = field.querySelector('.options-container');
                 const optionTemplate = document.createElement('div');
-                optionTemplate.classList.add('option-item');
+                optionTemplate.classList.add('option-item', 'option-entrance');
                 optionTemplate.innerHTML = `
-                    <input type="text" class="option-input w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-textColor" placeholder="Option">
-                    <button class="remove-option text-red-500 hover:text-red-700">
+                    <input type="text" class="option-input w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-primary text-textColor transition-all duration-300" placeholder="Option">
+                    <button class="remove-option text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-mid/50 transition-all duration-300">
                         <i class="fas fa-minus-circle"></i>
                     </button>
                 `;
@@ -92,7 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const removeOptionBtn = option.querySelector('.remove-option');
         if (removeOptionBtn) {
             removeOptionBtn.addEventListener('click', () => {
-                option.remove();
+                option.classList.add('option-exit');
+                setTimeout(() => option.remove(), 300);
             });
         }
     }
@@ -116,19 +339,32 @@ document.addEventListener('DOMContentLoaded', () => {
         formFields.querySelectorAll('.field-wrapper').forEach(field => {
             const question = field.querySelector('input[placeholder="Question"]').value.trim();
             const helpText = field.querySelector('input[placeholder="Help text (optional)"]')?.value.trim() || '';
-            const isRequired = field.querySelector('.required-toggle')?.classList.contains('text-primary') || false;
+            
+            // Enhanced required detection
+            const requiredToggle = field.querySelector('.required-toggle');
+            const isRequired = requiredToggle ? 
+                (requiredToggle.classList.contains('text-primary') || 
+                 requiredToggle.classList.contains('is-required')) : false;
+            
             let type = '';
             let options = [];
 
+            // More robust field type detection
             if (field.querySelector('textarea')) {
                 type = 'long-text';
-            } else if (field.querySelector('.option-item')) {
+            } else if (field.querySelector('.options-container')) {
                 const addOptionBtn = field.querySelector('.add-option-btn');
                 if (addOptionBtn) {
                     if (addOptionBtn.classList.contains('multiple-choice')) {
                         type = 'multiple-choice';
                     } else {
                         type = 'checkbox';
+                    }
+                } else {
+                    // Fallback detection by looking at the icon
+                    const icon = field.querySelector('.option-item span i');
+                    if (icon) {
+                        type = icon.classList.contains('fa-circle-dot') ? 'multiple-choice' : 'checkbox';
                     }
                 }
             } else {
@@ -149,7 +385,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 question,
                 helpText,
                 required: isRequired,
-                options
+                options,
+                // Add field_type_key to ensure consistency with responseHandler
+                field_type_key: mapTypeToResponseKey(type)
             });
         });
 
@@ -193,6 +431,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log('Collected form data with restrictions (disabled):', formData);
         return formData;
+    }
+    
+    // Map form builder types to response handler types
+    function mapTypeToResponseKey(formBuilderType) {
+        const typeMap = {
+            'short-text': 'text',
+            'long-text': 'textarea',
+            'multiple-choice': 'multiple_choice',
+            'checkbox': 'checkbox'
+        };
+        return typeMap[formBuilderType] || formBuilderType;
     }
 
     // Add email validation helper

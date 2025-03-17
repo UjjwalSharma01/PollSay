@@ -176,6 +176,26 @@ document.addEventListener('DOMContentLoaded', async () => {
       formFieldsData = formData.fields;
     }
     
+    // Map field types to ensure compatibility with formBuilder
+    formFieldsData = formFieldsData.map(field => {
+      // Check if the type needs to be mapped
+      if (field.field_type_key) {
+        // Already has mapped type - use it
+        field.type = field.field_type_key;
+      } else if (field.type === 'short-text') {
+        field.type = 'text';
+      } else if (field.type === 'long-text') {
+        field.type = 'textarea';
+      } else if (field.type === 'multiple-choice') {
+        field.type = 'multiple_choice';
+      }
+      // Ensure options array exists
+      if (!Array.isArray(field.options)) {
+        field.options = [];
+      }
+      return field;
+    });
+    
     // Render form fields
     renderFormFields(formFieldsData, formContentContainer);
     
@@ -189,7 +209,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     fields.forEach((field, index) => {
       const fieldElement = document.createElement('div');
-      fieldElement.className = 'mb-6 p-4 bg-white rounded-xl shadow';
+      fieldElement.className = 'mb-6 p-4 bg-white rounded-xl shadow field-entrance';
       fieldElement.dataset.fieldIndex = index;
       
       const questionText = document.createElement('h3');
@@ -203,9 +223,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         questionText.appendChild(requiredSpan);
       }
       
-      fieldElement.appendChild(questionText);
+      if (field.helpText) {
+        const helpTextElement = document.createElement('p');
+        helpTextElement.className = 'text-sm text-gray-500 mb-2';
+        helpTextElement.textContent = field.helpText;
+        fieldElement.appendChild(questionText);
+        fieldElement.appendChild(helpTextElement);
+      } else {
+        fieldElement.appendChild(questionText);
+      }
       
-      // Create input based on field type
+      // Create input based on field type - compatible with formBuilder types
       switch (field.type) {
         case 'text':
           const textInput = document.createElement('input');
@@ -219,7 +247,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           if (field.options && field.options.length) {
             field.options.forEach((option, optIndex) => {
               const wrapper = document.createElement('div');
-              wrapper.className = 'flex items-center mb-2';
+              wrapper.className = 'flex items-center mb-2 option-entrance';
+              setTimeout(() => wrapper.classList.remove('option-entrance'), 300);
               
               const radio = document.createElement('input');
               radio.type = 'radio';
@@ -227,7 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
               radio.id = `option-${index}-${optIndex}`;
               radio.value = option;
               radio.required = field.required;
-              radio.className = 'mr-2';
+              radio.className = 'mr-2 text-primary';
               
               const label = document.createElement('label');
               label.htmlFor = `option-${index}-${optIndex}`;
@@ -238,6 +267,42 @@ document.addEventListener('DOMContentLoaded', async () => {
               wrapper.appendChild(label);
               fieldElement.appendChild(wrapper);
             });
+          } else {
+            const noOptionsMsg = document.createElement('p');
+            noOptionsMsg.className = 'text-sm text-red-500';
+            noOptionsMsg.textContent = 'This question has no options defined.';
+            fieldElement.appendChild(noOptionsMsg);
+          }
+          break;
+          
+        case 'checkbox':
+          if (field.options && field.options.length) {
+            field.options.forEach((option, optIndex) => {
+              const wrapper = document.createElement('div');
+              wrapper.className = 'flex items-center mb-2 option-entrance';
+              setTimeout(() => wrapper.classList.remove('option-entrance'), 300);
+              
+              const check = document.createElement('input');
+              check.type = 'checkbox';
+              check.name = `field-${index}[]`;
+              check.id = `option-${index}-${optIndex}`;
+              check.value = option;
+              check.className = 'mr-2 text-primary';
+              
+              const label = document.createElement('label');
+              label.htmlFor = `option-${index}-${optIndex}`;
+              label.textContent = option;
+              label.className = 'text-gray-700';
+              
+              wrapper.appendChild(check);
+              wrapper.appendChild(label);
+              fieldElement.appendChild(wrapper);
+            });
+          } else {
+            const noOptionsMsg = document.createElement('p');
+            noOptionsMsg.className = 'text-sm text-red-500';
+            noOptionsMsg.textContent = 'This checkbox question has no options defined.';
+            fieldElement.appendChild(noOptionsMsg);
           }
           break;
           
@@ -248,8 +313,18 @@ document.addEventListener('DOMContentLoaded', async () => {
           textarea.required = field.required;
           fieldElement.appendChild(textarea);
           break;
+        
+        default:
+          console.warn(`Unknown field type "${field.type}" - defaulting to text input`);
+          const defaultInput = document.createElement('input');
+          defaultInput.type = 'text';
+          defaultInput.className = 'w-full p-2 border border-gray-300 rounded';
+          defaultInput.required = field.required;
+          fieldElement.appendChild(defaultInput);
       }
       
+      // Remove entrance animation after a delay
+      setTimeout(() => fieldElement.classList.remove('field-entrance'), 500);
       formFieldsElement.appendChild(fieldElement);
     });
     
@@ -349,13 +424,18 @@ document.addEventListener('DOMContentLoaded', async () => {
       e.preventDefault();
       
       try {
-        // Collect responses
+        // Collect responses with improved field type handling
         const responses = [];
         Array.from(document.getElementById('form-fields').children).forEach((fieldElement, index) => {
           if (!fieldElement.dataset.fieldIndex) return; // Skip if not a question field
           
           const fieldIndex = parseInt(fieldElement.dataset.fieldIndex);
           const field = fields[fieldIndex];
+          
+          if (!field) {
+            console.warn(`Field at index ${fieldIndex} not found in fields array`);
+            return;
+          }
           
           let value;
           
@@ -369,15 +449,27 @@ document.addEventListener('DOMContentLoaded', async () => {
               value = selected ? selected.value : null;
               break;
               
+            case 'checkbox':
+              // Handle multiple selected checkboxes
+              const checked = Array.from(fieldElement.querySelectorAll('input:checked'));
+              value = checked.map(cb => cb.value);
+              break;
+              
             case 'textarea':
               value = fieldElement.querySelector('textarea').value;
               break;
+              
+            default:
+              console.warn(`Unknown field type: ${field.type}, using text extraction`);
+              const input = fieldElement.querySelector('input, textarea');
+              value = input ? input.value : null;
           }
           
           responses.push({
             question: field.question,
             answer: value,
-            type: field.type
+            type: field.type,
+            required: field.required
           });
         });
         
