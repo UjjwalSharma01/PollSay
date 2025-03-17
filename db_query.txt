@@ -869,4 +869,35 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
+-- Ensure allowed_domains and allow_all_emails exist in forms:
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS allowed_domains TEXT[];
+ALTER TABLE public.forms ADD COLUMN IF NOT EXISTS allow_all_emails BOOLEAN DEFAULT true;
+-- Updated can_respond_to_form function using explicit parameter names:
+DROP FUNCTION IF EXISTS can_respond_to_form(UUID, TEXT);
+CREATE OR REPLACE FUNCTION can_respond_to_form(p_form_id UUID, p_user_email TEXT)
+RETURNS BOOLEAN AS $$
+DECLARE
+    v_form RECORD;
+    v_response_count INTEGER;
+    v_email_domain TEXT;
+BEGIN
+    SELECT * INTO v_form FROM forms WHERE id = p_form_id;
+    IF v_form IS NULL THEN RETURN FALSE; END IF;
+    IF NOT v_form.require_login THEN RETURN TRUE; END IF;
+    IF p_user_email IS NULL THEN RETURN FALSE; END IF;
+    IF v_form.allow_all_emails THEN
+        IF v_form.response_limit IS NOT NULL THEN
+            SELECT COUNT(*) INTO v_response_count 
+            FROM encrypted_responses AS er
+            WHERE er.form_id = p_form_id AND er.respondent_email = p_user_email;
+            RETURN v_response_count < v_form.response_limit;
+        ELSE
+            RETURN TRUE;
+        END IF;
+    END IF;
+    -- ... (allowed_emails and domain checks follow) ...
+    RETURN FALSE;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 

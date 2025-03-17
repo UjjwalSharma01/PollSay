@@ -154,25 +154,57 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // Collect participation restrictions values
+        /* 
+        // Participation restrictions feature - commented out for future implementation
         const allowedDomain = document.getElementById('allowed-domain').value.trim();
         const invitedEmailsRaw = document.getElementById('invited-emails').value.trim();
         const invitedEmails = invitedEmailsRaw ? invitedEmailsRaw.split(',').map(email => email.trim()).filter(email => email) : [];
-
+        
+        // Validate email format for invited emails
+        const invalidEmails = invitedEmails.filter(email => !isValidEmail(email));
+        if (invalidEmails.length > 0) {
+            alert(`Invalid email format: ${invalidEmails.join(', ')}`);
+            return null;
+        }
+        
+        // Extract domain without @ if present
+        let formattedDomain = null;
+        if (allowedDomain) {
+            formattedDomain = allowedDomain.startsWith('@') ? allowedDomain.substring(1) : allowedDomain;
+        }
+        
+        const restrictions = {
+            allowed_domains: formattedDomain ? [formattedDomain] : null,
+            allowed_emails: invitedEmails.length > 0 ? invitedEmails : null,
+            allow_all_emails: !(formattedDomain || invitedEmails.length > 0)
+        };
+        */
+        const restrictions = {}; // Default empty restrictions
+        
         const formData = {
             title,
             description,
             fields,
-            // add new properties for participation restrictions
-            allowed_domain: allowedDomain || null,
-            invited_emails: invitedEmails.length ? invitedEmails : null
+            // Participation restrictions feature commented out:
+            // allowed_domains: restrictions.allowed_domains,
+            // allowed_emails: restrictions.allowed_emails,
+            // allow_all_emails: restrictions.allow_all_emails
         };
 
-        console.log('Collected form data with restrictions:', formData);
+        console.log('Collected form data with restrictions (disabled):', formData);
         return formData;
+    }
+
+    // Add email validation helper
+    function isValidEmail(email) {
+        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+        return re.test(String(email).toLowerCase());
     }
 
     // Show Preview Modal
     function showPreviewModal(formData) {
+        if (!formData) return; // Don't proceed if form data is invalid
+        
         const modalBg = document.createElement('div');
         modalBg.className = 'fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50';
 
@@ -263,6 +295,36 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         modalContent.appendChild(previewForm);
 
+        // Create the form section for restrictions if present
+        /*
+        // Participation restrictions display - commented out for now
+        if (formData.allowed_domains || formData.allowed_emails) {
+            const restrictionsDiv = document.createElement('div');
+            restrictionsDiv.className = 'mt-4 p-4 rounded-lg bg-yellow-900/20 border border-yellow-900/30';
+            
+            const restrictionsTitle = document.createElement('h4');
+            restrictionsTitle.className = 'text-sm font-medium text-yellow-500 mb-2';
+            restrictionsTitle.innerHTML = '<i class="fas fa-lock mr-2"></i>Access Restrictions';
+            restrictionsDiv.appendChild(restrictionsTitle);
+            
+            if (formData.allowed_domains) {
+                const domainP = document.createElement('p');
+                domainP.className = 'text-xs text-light';
+                domainP.textContent = `Only emails with domain: ${formData.allowed_domains.join(', ')}`;
+                restrictionsDiv.appendChild(domainP);
+            }
+            
+            if (formData.allowed_emails) {
+                const emailsP = document.createElement('p');
+                emailsP.className = 'text-xs text-light';
+                emailsP.textContent = `Limited to specific emails: ${formData.allowed_emails.length} invited`;
+                restrictionsDiv.appendChild(emailsP);
+            }
+            
+            modalContent.appendChild(restrictionsDiv);
+        }
+        */
+
         // Modal Buttons
         const buttonDiv = document.createElement('div');
         buttonDiv.className = 'flex justify-end mt-6 space-x-3';
@@ -277,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const shareBtn = document.createElement('button');
         shareBtn.type = 'button';
-        shareBtn.textContent = 'Share';
+        shareBtn.innerHTML = '<i class="fas fa-share-alt mr-2"></i>Share';
         shareBtn.className = 'gradient-btn text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300';
         shareBtn.addEventListener('click', async () => {
             // Check if user is logged in
@@ -303,27 +365,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 fields: formData.fields,
                 share_code: shareCode,
                 org_id: orgID,
-                created_by: userID
+                created_by: userID,
+                // Add restrictions to the form submission
+                // allowed_domains: formData.allowed_domains,
+                // allowed_emails: formData.allowed_emails,
+                // allow_all_emails: formData.allow_all_emails
             };
 
-            const { data, error } = await supabase
-                .from('forms')
-                .insert([formToSave]);
-
-            if (error) {
-                alert('Error saving form: ' + error.message);
-                return;
-            }
-
-            // Construct the share link and copy it to clipboard
-            const shareLink = `pollsay/${shareCode}`;
             try {
-                await navigator.clipboard.writeText(shareLink);
-                alert(`Form shared! Link copied to clipboard: ${shareLink}`);
-            } catch (err) {
-                alert(`Form shared! Please copy the link: ${shareLink}`);
+                const { data, error } = await supabase
+                    .from('forms')
+                    .insert([formToSave]);
+
+                if (error) throw error;
+
+                // Show success message with appropriate restriction info
+                let restrictionMsg = '';
+                if (!formData.allow_all_emails) {
+                    restrictionMsg = '\n\nNote: This form has access restrictions in place.';
+                }
+
+                // Construct the share link and copy it to clipboard
+                const shareLink = `pollsay/${shareCode}`;
+                try {
+                    await navigator.clipboard.writeText(shareLink);
+                    alert(`Form created successfully! Link copied to clipboard.${restrictionMsg}`);
+                } catch (err) {
+                    alert(`Form created successfully! Please copy the link: ${shareLink}${restrictionMsg}`);
+                }
+                document.body.removeChild(modalBg);
+                
+            } catch (error) {
+                console.error('Error saving form:', error);
+                alert('Error saving form: ' + error.message);
             }
-            document.body.removeChild(modalBg);
         });
 
         buttonDiv.appendChild(editBtn);

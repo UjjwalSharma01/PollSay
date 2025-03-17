@@ -1,7 +1,5 @@
--- Add missing completion_time column to form_responses table
+-- Add missing columns for responses analytics and email tracking
 ALTER TABLE public.form_responses ADD COLUMN IF NOT EXISTS completion_time INTEGER;
-
--- Also add the other columns if they're missing
 ALTER TABLE public.form_responses ADD COLUMN IF NOT EXISTS respondent_email TEXT;
 ALTER TABLE public.form_responses ADD COLUMN IF NOT EXISTS respondent_pseudonym TEXT;
 ALTER TABLE public.form_responses ADD COLUMN IF NOT EXISTS display_mode TEXT;
