@@ -59,6 +59,27 @@
         .dropdown:hover .dropdown-content {
             display: block;
         }
+
+        .coming-soon-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: linear-gradient(to right, #FF6B6B, #FF8E53);
+            color: white;
+            font-size: 0.6rem;
+            font-weight: 600;
+            padding: 0.2rem 0.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transform: rotate(5deg);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: rotate(5deg) scale(1); }
+            50% { transform: rotate(5deg) scale(1.1); }
+            100% { transform: rotate(5deg) scale(1); }
+        }
     </style>
 </head>
 <body>
@@ -97,9 +118,13 @@
                         <h1 class="text-xl font-semibold">Create Form</h1>
                     </div>
                     <div class="flex items-center gap-4">
-                        <button id="toggle-encryption" disabled class="flex items-center px-4 py-2 bg-gray-500 hover:bg-gray-600 text-white rounded-lg transition-colors">
-                            <i class="fas fa-lock mr-2"></i> Encryption: OFF
-                        </button>
+                        <!-- Restored encryption button with "Coming Soon" badge -->
+                        <div class="relative">
+                            <button id="toggle-encryption" disabled class="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors opacity-90 sm:flex hidden">
+                                <i class="fas fa-lock mr-2"></i> Encryption
+                            </button>
+                            <span class="coming-soon-badge sm:flex hidden">Coming Soon!</span>
+                        </div>
                         
                         <button id="save-form" class="flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors">
                             <i class="fas fa-save mr-2"></i> Save Form
@@ -143,6 +168,9 @@
                             <div class="flex items-center">
                                 <i class="fas fa-shield-alt text-secondary mr-2"></i>
                                 <span class="text-sm font-medium">Form Security</span>
+                                <div class="ml-2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-xs text-white rounded-full animate-pulse">
+                                    End-to-end encryption coming soon
+                                </div>
                             </div>
                             <a href="/public/dashboard/settings.html?tab=security" class="text-xs text-primary hover:underline">
                                 Security Settings
@@ -283,6 +311,10 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>
-    <script type="module" src="/public/js/formBuilder/encryptedFormBuilder.js"></script>
+    <!-- Encryption functionality temporarily disabled -->
+    <!-- <script type="module" src="/public/js/formBuilder/encryptedFormBuilder.js"></script> -->
+    
+    <!-- Use standard form builder instead -->
+    <script type="module" src="/public/js/formBuilder/formBuilder.js"></script>
 </body>
 </html>
