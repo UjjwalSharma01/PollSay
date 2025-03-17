@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Management - PollSay</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --color-dark: #121212;
+            --color-mid: #1e1e1e;
+            --color-light: #b0b0b0;
+            --color-primary: #6200ea;
+            --color-secondary: #03dac6;
+        }
+        
+        body {
+            background-color: var(--color-dark);
+            color: white;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        .bg-dark { background-color: var(--color-dark); }
+        .bg-mid { background-color: var(--color-mid); }
+        .text-light { color: var(--color-light); }
+        .text-primary { color: var(--color-primary); }
+        .text-secondary { color: var(--color-secondary); }
+        .bg-primary { background-color: var(--color-primary); }
+        .bg-secondary { background-color: var(--color-secondary); }
+        .border-mid { border-color: var(--color-mid); }
+        
+        .dashboard-card {
+            background-color: var(--color-mid);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .from-primary { --tw-gradient-from: var(--color-primary); }
+        .to-secondary { --tw-gradient-to: var(--color-secondary); }
+        
+        .positive-change { color: #4ade80; }
+        .negative-change { color: #f87171; }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark border-r border-mid hidden lg:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">PollSay</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="/public/dashboard/index.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-home mr-3"></i> Dashboard
+                </a>
+                <a href="/public/dashboard/analytics.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-chart-bar mr-3"></i> Analytics
+                </a>
+                <a href="/public/form-builder.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-clipboard-list mr-3"></i> Forms
+                </a>
+                <a href="/public/dashboard/team.html" class="flex items-center px-6 py-3 bg-mid text-white transition-colors">
+                    <i class="fas fa-users mr-3"></i> Team
+                </a>
+                <a href="/public/dashboard/settings.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-cog mr-3"></i> Settings
+                </a>
+                <a href="/public/dashboard/encryption-settings.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-shield-alt mr-3"></i> Encryption
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="bg-dark border-b border-mid p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-semibold">Team Management</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="invite-member-btn" class="flex items-center bg-primary hover:bg-opacity-90 px-4 py-2 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-user-plus mr-2"></i> Invite Member
+                        </button>
+                        <div class="relative">
+                            <img id="user-avatar" class="w-8 h-8 rounded-full cursor-pointer" alt="Profile" 
+                                src="https://ui-avatars.com/api/?background=random" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=User&background=random';">
+                            <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-48 bg-dark border border-mid rounded-lg shadow-lg z-10">
+                                <div class="px-4 py-3 border-b border-mid">
+                                    <p id="user-name" class="text-sm font-medium">Loading...</p>
+                                    <p id="user-email" class="text-xs text-gray-400 truncate">Loading...</p>
+                                </div>
+                                <ul>
+                                    <li><a href="/public/dashboard/settings.html" class="block px-4 py-2 text-sm hover:bg-mid">Settings</a></li>
+                                    <li><button id="logout-btn" class="w-full text-left px-4 py-2 text-sm hover:bg-mid">Sign out</button></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Team Content -->
+            <div class="p-6">
+                <!-- Team Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Total Members</div>
+                                <div id="members-count" class="text-2xl font-semibold mt-2">--</div>
+                            </div>
+                            <div class="bg-blue-500/10 p-3 rounded-lg">
+                                <i class="fas fa-users text-blue-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Admins</div>
+                                <div id="admins-count" class="text-2xl font-semibold mt-2">--</div>
+                            </div>
+                            <div class="bg-purple-500/10 p-3 rounded-lg">
+                                <i class="fas fa-user-shield text-purple-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Pending Invites</div>
+                                <div id="pending-invites" class="text-2xl font-semibold mt-2">--</div>
+                            </div>
+                            <div class="bg-yellow-500/10 p-3 rounded-lg">
+                                <i class="fas fa-envelope text-yellow-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Team Members List -->
+                <div class="dashboard-card mb-8">
+                    <div class="p-4 border-b border-mid flex justify-between items-center">
+                        <h2 class="text-lg font-medium">Team Members</h2>
+                        <div class="relative">
+                            <input type="text" id="search-members" placeholder="Search members..." 
+                                class="bg-dark border border-mid rounded-lg px-4 py-2 text-sm w-64 focus:outline-none focus:ring-1 focus:ring-primary">
+                            <i class="fas fa-search absolute right-3 top-2.5 text-light"></i>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-dark">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Member</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Status</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Joined</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-light uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="team-members-table" class="divide-y divide-mid">
+                                <tr class="text-center">
+                                    <td colspan="6" class="px-6 py-8 text-light">
+                                        <div class="flex flex-col items-center">
+                                            <i class="fas fa-spinner fa-spin text-2xl mb-2"></i>
+                                            <span>Loading team members...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Pending Invitations -->
+                <div class="dashboard-card">
+                    <div class="p-4 border-b border-mid flex justify-between items-center">
+                        <h2 class="text-lg font-medium">Pending Invitations</h2>
+                        <button id="refresh-invites" class="text-sm text-light hover:text-white">
+                            <i class="fas fa-sync-alt mr-1"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full">
+                            <thead class="bg-dark">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Email</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Role</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Invited By</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-light uppercase tracking-wider">Sent</th>
+                                    <th class="px-6 py-3 text-right text-xs font-medium text-light uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="pending-invites-table" class="divide-y divide-mid">
+                                <tr class="text-center">
+                                    <td colspan="5" class="px-6 py-8 text-light">
+                                        <span>No pending invitations</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Invite Member Modal -->
+            <div id="invite-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+                <div class="bg-dark border border-mid rounded-lg w-full max-w-md p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-lg font-semibold">Invite New Team Member</h3>
+                        <button id="close-invite-modal" class="text-light hover:text-white">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <form id="invite-form">
+                        <div class="mb-4">
+                            <label for="invite-email" class="block text-sm font-medium mb-1">Email Address</label>
+                            <input type="email" id="invite-email" class="w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary" required>
+                        </div>
+                        <div class="mb-4">
+                            <label for="invite-role" class="block text-sm font-medium mb-1">Role</label>
+                            <select id="invite-role" class="w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary">
+                                <option value="member">Member</option>
+                                <option value="admin">Admin</option>
+                                <option value="viewer">Viewer</option>
+                            </select>
+                        </div>
+                        <div class="mb-4">
+                            <label for="invite-message" class="block text-sm font-medium mb-1">Personal Message (Optional)</label>
+                            <textarea id="invite-message" rows="3" class="w-full bg-mid border border-mid rounded-lg px-4 py-2 focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+                        </div>
+                        <div class="flex justify-end">
+                            <button type="button" id="cancel-invite" class="px-4 py-2 text-light hover:text-white mr-2">Cancel</button>
+                            <button type="submit" id="send-invite" class="bg-primary hover:bg-opacity-90 px-4 py-2 rounded-lg">Send Invitation</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </main>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module">
+        import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
+        import { supabase } from '../../src/config/supabase.js';
+        import { 
+            getTeamMembers, 
+            getPendingInvites, 
+            sendInvitation, 
+            resendInvitation, 
+            cancelInvitation, 
+            removeTeamMember, 
+            updateTeamMemberRole 
+        } from '../js/dashboard/team.js';
+        
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Initialize common dashboard elements
+            const session = await initializeDashboard();
+            if (!session) return;
+            
+            // DOM Elements
+            const inviteMemberBtn = document.getElementById('invite-member-btn');
+            const inviteModal = document.getElementById('invite-modal');
+            const closeInviteModal = document.getElementById('close-invite-modal');
+            const cancelInvite = document.getElementById('cancel-invite');
+            const inviteForm = document.getElementById('invite-form');
+            
+            // Team members table
+            const teamMembersTable = document.getElementById('team-members-table');
+            const pendingInvitesTable = document.getElementById('pending-invites-table');
+            const searchMembers = document.getElementById('search-members');
+            const refreshInvites = document.getElementById('refresh-invites');
+            
+            // Show/Hide invite modal
+            inviteMemberBtn.addEventListener('click', () => {
+                inviteModal.classList.remove('hidden');
+            });
+            
+            const hideModal = () => {
+                inviteModal.classList.add('hidden');
+                inviteForm.reset();
+            };
+            
+            closeInviteModal.addEventListener('click', hideModal);
+            cancelInvite.addEventListener('click', hideModal);
+            
+            // Close modal when clicking outside
+            inviteModal.addEventListener('click', (e) => {
+                if (e.target === inviteModal) {
+                    hideModal();
+                }
+            });
+            
+            // Handle invite form submission
+            inviteForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const email = document.getElementById('invite-email').value;
+                const role = document.getElementById('invite-role').value;
+                const message = document.getElementById('invite-message').value;
+                
+                try {
+                    const result = await sendInvitation(email, role, message, 'current-org-id');
+                    if (result.success) {
+                        alert(`Invitation sent to ${email} for role: ${role}`);
+                        hideModal();
+                        loadPendingInvites();
+                    } else {
+                        alert(`Failed to send invitation: ${result.error}`);
+                    }
+                } catch (error) {
+                    console.error('Error sending invitation:', error);
+                    alert('Failed to send invitation. Please try again.');
+                }
+            });
+            
+            // Load team members
+            async function loadTeamMembers() {
+                try {
+                    const members = await getTeamMembers('current-org-id');
+                    
+                    // Update counts
+                    document.getElementById('members-count').textContent = members.length;
+                    document.getElementById('admins-count').textContent = members.filter(m => m.role === 'admin').length;
+                    
+                    // Clear and populate table
+                    teamMembersTable.innerHTML = '';
+                    
+                    if (members.length === 0) {
+                        teamMembersTable.innerHTML = `
+                            <tr class="text-center">
+                                <td colspan="6" class="px-6 py-8 text-light">
+                                    No team members found
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    members.forEach(member => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-10 w-10">
+                                        <img class="h-10 w-10 rounded-full" src="https://ui-avatars.com/api/?name=${encodeURIComponent(member.full_name)}&background=random" alt="${member.full_name}">
+                                    </div>
+                                    <div class="ml-4">
+                                        <div class="text-sm font-medium">${member.full_name}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${member.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    ${member.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                                    member.role === 'member' ? 'bg-green-100 text-green-800' : 
+                                    'bg-blue-100 text-blue-800'}">
+                                    ${member.role.charAt(0).toUpperCase() + member.role.slice(1)}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    ${member.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}">
+                                    ${member.status.charAt(0).toUpperCase() + member.status.slice(1)}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${new Date(member.joined_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <button class="text-primary hover:text-primary-dark mr-3" data-id="${member.id}" data-action="edit">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                ${member.role !== 'admin' ? 
+                                    `<button class="text-red-500 hover:text-red-700" data-id="${member.id}" data-action="remove">
+                                        <i class="fas fa-trash"></i>
+                                    </button>` : ''}
+                            </td>
+                        `;
+                        teamMembersTable.appendChild(row);
+                    });
+                    
+                    // Set up action buttons
+                    document.querySelectorAll('[data-action="edit"]').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const memberId = button.getAttribute('data-id');
+                            alert(`Edit member with ID: ${memberId}`);
+                            // Implement edit functionality
+                        });
+                    });
+                    
+                    document.querySelectorAll('[data-action="remove"]').forEach(button => {
+                        button.addEventListener('click', () => {
+                            const memberId = button.getAttribute('data-id');
+                            if (confirm('Are you sure you want to remove this team member?')) {
+                                // Implement remove functionality
+                                alert(`Removing member with ID: ${memberId}`);
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading team members:', error);
+                    teamMembersTable.innerHTML = `
+                        <tr class="text-center">
+                            <td colspan="6" class="px-6 py-4 text-red-500">
+                                Error loading team members. Please try refreshing the page.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Load pending invites
+            async function loadPendingInvites() {
+                try {
+                    const invites = await getPendingInvites('current-org-id');
+                    
+                    // Update count
+                    document.getElementById('pending-invites').textContent = invites.length;
+                    
+                    // Clear and populate table
+                    pendingInvitesTable.innerHTML = '';
+                    
+                    if (invites.length === 0) {
+                        pendingInvitesTable.innerHTML = `
+                            <tr class="text-center">
+                                <td colspan="5" class="px-6 py-8 text-light">
+                                    No pending invitations
+                                </td>
+                            </tr>
+                        `;
+                        return;
+                    }
+                    
+                    invites.forEach(invite => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${invite.email}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                                    ${invite.role === 'admin' ? 'bg-purple-100 text-purple-800' : 
+                                    invite.role === 'member' ? 'bg-green-100 text-green-800' : 
+                                    'bg-blue-100 text-blue-800'}">
+                                    ${invite.role.charAt(0).toUpperCase() + invite.role.slice(1)}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${invite.invited_by}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">${new Date(invite.created_at).toLocaleDateString()}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm">
+                                <button class="text-primary hover:text-primary-dark mr-3" data-id="${invite.id}" data-action="resend">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                                <button class="text-red-500 hover:text-red-700" data-id="${invite.id}" data-action="cancel">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </td>
+                        `;
+                        pendingInvitesTable.appendChild(row);
+                    });
+                    
+                    // Set up action buttons
+                    document.querySelectorAll('[data-action="resend"]').forEach(button => {
+                        button.addEventListener('click', async () => {
+                            const inviteId = button.getAttribute('data-id');
+                            try {
+                                const result = await resendInvitation(inviteId);
+                                if (result.success) {
+                                    alert('Invitation resent successfully');
+                                    loadPendingInvites();
+                                } else {
+                                    alert(`Failed to resend invitation: ${result.error}`);
+                                }
+                            } catch (error) {
+                                console.error('Error resending invitation:', error);
+                                alert('Failed to resend invitation. Please try again.');
+                            }
+                        });
+                    });
+                    
+                    document.querySelectorAll('[data-action="cancel"]').forEach(button => {
+                        button.addEventListener('click', async () => {
+                            const inviteId = button.getAttribute('data-id');
+                            if (confirm('Are you sure you want to cancel this invitation?')) {
+                                try {
+                                    const result = await cancelInvitation(inviteId);
+                                    if (result.success) {
+                                        alert('Invitation canceled successfully');
+                                        loadPendingInvites();
+                                    } else {
+                                        alert(`Failed to cancel invitation: ${result.error}`);
+                                    }
+                                } catch (error) {
+                                    console.error('Error canceling invitation:', error);
+                                    alert('Failed to cancel invitation. Please try again.');
+                                }
+                            }
+                        });
+                    });
+                    
+                } catch (error) {
+                    console.error('Error loading pending invites:', error);
+                    pendingInvitesTable.innerHTML = `
+                        <tr class="text-center">
+                            <td colspan="5" class="px-6 py-4 text-red-500">
+                                Error loading invitations. Please try refreshing the page.
+                            </td>
+                        </tr>
+                    `;
+                }
+            }
+            
+            // Search functionality
+            searchMembers.addEventListener('input', (e) => {
+                const searchTerm = e.target.value.toLowerCase();
+                const rows = teamMembersTable.querySelectorAll('tr');
+                
+                rows.forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    if (text.includes(searchTerm) || searchTerm === '') {
+                        row.style.display = '';
+                    } else {
+                        row.style.display = 'none';
+                    }
+                });
+            });
+            
+            // Refresh invitations
+            refreshInvites.addEventListener('click', loadPendingInvites);
+            
+            // Load initial data
+            loadTeamMembers();
+            loadPendingInvites();
+        });
+    </script>
+</body>
+</html>
