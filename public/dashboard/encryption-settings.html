@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Encryption Settings | PollSay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#171717',
+                        primary: '#7C4DFF',
+                        secondary: '#00B8D4',
+                        dark: '#262626',
+                        mid: '#404040',
+                        light: '#d4d4d4',
+                        textColor: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #171717;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .settings-card {
+            background-color: #262626;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex">
+        <!-- Sidebar (same as analytics page) -->
+        <aside class="w-64 bg-dark border-r border-mid hidden lg:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">PollSay</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="/public/dashboard/index.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-home mr-3"></i> Dashboard
+                </a>
+                <a href="/public/dashboard/analytics.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-chart-bar mr-3"></i> Analytics
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-clipboard-list mr-3"></i> Forms
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-users mr-3"></i> Team
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 bg-mid text-white transition-colors">
+                    <i class="fas fa-shield-alt mr-3"></i> Encryption Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="bg-dark border-b border-mid p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-semibold">Encryption Settings</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <div class="relative">
+                            <img src="https://via.placeholder.com/40" alt="Profile" class="w-8 h-8 rounded-full">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="p-6">
+                <div class="max-w-3xl mx-auto space-y-6">
+                    <!-- Encryption Status -->
+                    <div class="settings-card">
+                        <div class="p-4 border-b border-mid">
+                            <h2 class="text-lg font-medium">Encryption Status</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <div class="flex items-center">
+                                <div id="encryption-status" class="flex items-center">
+                                    <i class="fas fa-lock text-green-500 mr-2"></i>
+                                    <span>End-to-end encryption is enabled for your organization</span>
+                                </div>
+                            </div>
+                            
+                            <p class="text-light text-sm">
+                                End-to-end encryption ensures that sensitive form responses can only be read by authorized members of your organization who have the decryption key.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Generate or Replace Keys -->
+                    <div class="settings-card">
+                        <div class="p-4 border-b border-mid">
+                            <h2 class="text-lg font-medium">Encryption Keys</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <p class="text-sm text-light">
+                                Your organization's encryption keys are used to secure form data. You can generate new keys at any time, but this will make previously encrypted data unreadable unless you have backed up the old keys.
+                            </p>
+                            
+                            <div class="flex flex-col md:flex-row gap-4">
+                                <button id="generate-keys" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-white transition-colors flex items-center">
+                                    <i class="fas fa-key mr-2"></i> Generate New Keys
+                                </button>
+                                
+                                <button id="download-keys" class="px-4 py-2 bg-dark border border-light/20 hover:bg-mid rounded-lg text-white transition-colors flex items-center">
+                                    <i class="fas fa-download mr-2"></i> Backup Keys
+                                </button>
+                            </div>
+                            
+                            <div class="border border-yellow-600/30 bg-yellow-600/10 rounded-lg p-4 text-sm">
+                                <div class="flex items-start">
+                                    <i class="fas fa-exclamation-triangle text-yellow-500 mr-2 mt-0.5"></i>
+                                    <div>
+                                        <p class="text-yellow-300 font-medium">Important Security Warning</p>
+                                        <p class="text-light mt-1">
+                                            Please store your encryption keys securely. If you lose your keys, encrypted data will be permanently inaccessible. We recommend backing up your keys to a secure, encrypted storage.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Change Encryption Passphrase -->
+                    <div class="settings-card">
+                        <div class="p-4 border-b border-mid">
+                            <h2 class="text-lg font-medium">Encryption Passphrase</h2>
+                        </div>
+                        <div class="p-6 space-y-4">
+                            <p class="text-sm text-light">
+                                Your encryption passphrase is used to protect your private keys. Make sure it's strong and memorable, but don't reuse passwords from other sites.
+                            </p>
+                            
+                            <form id="passphrase-form" class="space-y-4">
+                                <div class="space-y-2">
+                                    <label for="current-passphrase" class="block text-sm">Current Passphrase</label>
+                                    <input type="password" id="current-passphrase" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:border-primary">
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="new-passphrase" class="block text-sm">New Passphrase</label>
+                                    <input type="password" id="new-passphrase" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:border-primary">
+                                </div>
+                                
+                                <div class="space-y-2">
+                                    <label for="confirm-passphrase" class="block text-sm">Confirm New Passphrase</label>
+                                    <input type="password" id="confirm-passphrase" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:border-primary">
+                                </div>
+                                
+                                <button type="submit" class="px-4 py-2 bg-primary hover:bg-primary/90 rounded-lg text-white transition-colors">
+                                    Update Passphrase
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/src/config/supabase.js"></script>
+    <script type="module" src="/public/js/dashboard/encryption-settings.js"></script>
+</body>
+</html>

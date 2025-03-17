@@ -28,6 +28,8 @@ function clearErrors() {
 
 // DOMContentLoaded Event
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("Sign-in script loaded, Supabase initialized");
+    
     // Form handling
     const loginForm = document.getElementById('loginForm');
     const emailInput = document.getElementById('email');
@@ -99,8 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     window.location.href = '/public/formBuilder.html';
                 }
                 
-                // ...existing code...
-
             } catch (error) {
                 console.error('Authentication error:', error);
                 showError(emailInput, error.message);

@@ -1,3 +1,5 @@
+import { supabase } from '../../../src/config/supabase.js';
+
 // Define utility functions outside the DOMContentLoaded event
 function validateEmail(email) {
     const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -18,6 +20,7 @@ function checkPasswordStrength(password) {
     console.log(`Password strength score: ${strengthScore}/5`);
     return { strength, strengthScore };
 }
+
 async function uploadFileToSupabase(file) {
     console.log('Uploading file to Supabase storage');
     const fileName = `${Date.now()}-${file.name}`;
@@ -33,13 +36,10 @@ async function uploadFileToSupabase(file) {
     }
 }
 
-// Import Supabase client
-import { supabase } from '../../../src/config/supabase.js';
-
 console.log("Initializing form handler...");
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log("DOM fully loaded");
+    console.log("DOM fully loaded, Supabase initialized");
 
     const form = document.getElementById('multi-step-form');
     const steps = document.querySelectorAll('.form-step');
@@ -124,10 +124,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
     // Define which steps are optional (0-based index)
     const optionalSteps = [2]; // Step 3 is optional
-        async function validateStep(step) {
+    async function validateStep(step) {
         console.log(`Validating step ${step}`);
     
         // Skip validation for optional steps
@@ -363,8 +362,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-
-    
     // Step Navigation
     nextBtns.forEach((btn) => {
         btn.addEventListener('click', async () => {
@@ -421,8 +418,6 @@ document.addEventListener('DOMContentLoaded', function() {
             console.log(`Returned to step ${currentStep}`);
         });
     });
-    
-
 
     // Add team members
     if (addMemberBtn) {
@@ -441,14 +436,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-
-    
-       // ...existing code...
-    
-    
-    
-
-    // Form Submission
+    // Form Submission - Updated to use RLS
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
         console.log('Form submission initiated');
@@ -457,64 +445,65 @@ document.addEventListener('DOMContentLoaded', function() {
             showError(document.getElementById('termsAccept'), 'Please accept the terms');
             return;
         }
+        
         try {
             setLoading(true);
-            console.log('Submitting organization data to Supabase');
-    
-            // Save organization
+            
+            // 1. Create the user account first
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email: formData.organization.email,
+                password: formData.security.password,
+                options: {
+                    data: {
+                        // We'll update this with org_id after creating the org
+                    }
+                }
+            });
+            
+            if (authError) throw authError;
+            
+            // 2. Create the organization record
             const { data: org, error: orgError } = await supabase
                 .from('organizations')
                 .insert([{
                     email: formData.organization.email,
                     org_name: formData.organization.org_name,
                     org_size: formData.organization.org_size,
-                    industry: formData.organization.industry
+                    industry: formData.organization.industry,
+                    created_by: authData.user.id
                 }])
                 .select()
                 .single();
+                
             if (orgError) throw orgError;
-            console.log('Organization created:', org.id);
-    
-            // Create user account
-            console.log('Creating user account');
-            const { user, session, error: authError } = await supabase.auth.signUp({
-                email: formData.organization.email,
-                password: formData.security.password,
-                options: {
-                    data: {
-                        org_id: org.id,
-                        // two_factor_enabled: formData.security.twoFactorEnabled // Uncomment if needed
-                    }
-                }
+            
+            // 3. Update user's metadata with org_id
+            const { error: updateError } = await supabase.auth.updateUser({
+                data: { org_id: org.id }
             });
-            if (authError) throw authError;
-            console.log('User account created:', user.id);
-    
-            // Ensure the user is authenticated
-            if (!supabase.auth.user()) {
-                throw new Error('User not authenticated after sign-up');
-            }
-    
-            // Save team members
+            
+            if (updateError) throw updateError;
+            
+            // 4. Add team members if provided
             if (formData.team.members.length > 0) {
-                console.log(`Adding ${formData.team.members.length} team members`);
                 const teamMembers = formData.team.members.map(email => ({
                     org_id: org.id,
-                    email,
+                    email: email,
                     role: formData.team.defaultRole,
-                    user_id: user.id // Assign the authenticated user's ID
+                    invited_by: authData.user.id
                 }));
+                
                 const { error: teamError } = await supabase
                     .from('team_members')
                     .insert(teamMembers);
+                    
                 if (teamError) throw teamError;
-                console.log('Team members added successfully');
             }
-    
+            
             console.log('Form submission completed successfully');
             showToast('Organization created successfully!');
-    
-            // Display success message instead of redirecting
+            
+            // Display success message
             steps[currentStep].classList.add('hidden');
             const successStep = document.createElement('div');
             successStep.className = 'form-step active space-y-6';
@@ -523,13 +512,18 @@ document.addEventListener('DOMContentLoaded', function() {
                     Success!
                 </h2>
                 <p class="text-center text-gray-300">Your organization has been created successfully.</p>
+                <div class="flex justify-center mt-4">
+                    <a href="/public/dashboard/index.html" class="py-3 px-6 bg-gradient-to-r from-primary to-secondary rounded-xl text-white font-medium hover:opacity-90">
+                        Go to Dashboard
+                    </a>
+                </div>
             `;
             form.appendChild(successStep);
         } catch (error) {
             console.error('Form submission error:', error);
             
             // Check if the error is due to the user already existing
-            if (error.status === 409 || error.message.includes('duplicate key')) {
+            if (error.message.includes('already exists')) {
                 showError(document.getElementById('email'), 'User with this email already exists.');
             } else {
                 showToast('An error occurred. Please try again.', 'error');
@@ -538,7 +532,6 @@ document.addEventListener('DOMContentLoaded', function() {
             setLoading(false);
         }
     });
-    
 
     // Initialize all features
     function initializeAllFeatures() {

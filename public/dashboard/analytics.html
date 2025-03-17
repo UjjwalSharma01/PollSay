@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Response Analytics | PollSay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.2/papaparse.min.js"></script>
+    
+    <!-- Tailwind Configuration -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        background: '#171717',
+                        primary: '#7C4DFF',
+                        secondary: '#00B8D4',
+                        dark: '#262626',
+                        mid: '#404040',
+                        light: '#d4d4d4',
+                        textColor: '#ffffff'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #171717;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+        }
+        .dashboard-card {
+            background-color: #262626;
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .metric-value {
+            font-size: 1.875rem;
+            font-weight: 600;
+        }
+        .metric-label {
+            color: #a3a3a3;
+            font-size: 0.875rem;
+        }
+        .positive-change {
+            color: #10b981;
+        }
+        .negative-change {
+            color: #ef4444;
+        }
+    </style>
+</head>
+<body>
+    <div class="min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-dark border-r border-mid hidden lg:block">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">PollSay</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-home mr-3"></i> Dashboard
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 bg-mid text-white transition-colors">
+                    <i class="fas fa-chart-bar mr-3"></i> Analytics
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-clipboard-list mr-3"></i> Forms
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-users mr-3"></i> Team
+                </a>
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                    <i class="fas fa-cog mr-3"></i> Settings
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 overflow-y-auto">
+            <!-- Top Bar -->
+            <header class="bg-dark border-b border-mid p-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h1 class="text-xl font-semibold">Response Analytics</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <button id="export-csv" class="flex items-center bg-dark border border-light/20 hover:bg-mid px-3 py-2 rounded-lg text-sm transition-colors">
+                            <i class="fas fa-download mr-2"></i> Export CSV
+                        </button>
+                        <div class="relative">
+                            <img src="https://via.placeholder.com/40" alt="Profile" class="w-8 h-8 rounded-full">
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Content -->
+            <div class="p-6">
+                <!-- Form Selector -->
+                <div class="mb-6">
+                    <label for="form-selector" class="block text-sm font-medium text-light mb-2">Select Form</label>
+                    <select id="form-selector" class="w-full sm:w-96 px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/50">
+                        <option value="" selected disabled>Select a form to view analytics</option>
+                        <!-- Will be populated with user's forms -->
+                    </select>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- Total Responses -->
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Total Responses</div>
+                                <div id="total-responses" class="metric-value mt-2">--</div>
+                                <div id="response-change" class="flex items-center mt-1">
+                                    <span class="text-xs positive-change"></span>
+                                </div>
+                            </div>
+                            <div class="bg-primary/10 p-3 rounded-lg">
+                                <i class="fas fa-poll text-primary"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completion Rate -->
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Completion Rate</div>
+                                <div id="completion-rate" class="metric-value mt-2">--</div>
+                                <div id="completion-change" class="flex items-center mt-1">
+                                    <span class="text-xs positive-change"></span>
+                                </div>
+                            </div>
+                            <div class="bg-secondary/10 p-3 rounded-lg">
+                                <i class="fas fa-check-circle text-secondary"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Avg. Time to Complete -->
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Avg. Time to Complete</div>
+                                <div id="avg-time" class="metric-value mt-2">--</div>
+                                <div id="time-change" class="flex items-center mt-1">
+                                    <span class="text-xs positive-change"></span>
+                                </div>
+                            </div>
+                            <div class="bg-green-500/10 p-3 rounded-lg">
+                                <i class="fas fa-clock text-green-500"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Response Rate -->
+                    <div class="dashboard-card p-6">
+                        <div class="flex items-start justify-between">
+                            <div>
+                                <div class="text-light text-sm font-medium">Response Rate</div>
+                                <div id="response-rate" class="metric-value mt-2">--</div>
+                                <div id="rate-change" class="flex items-center mt-1">
+                                    <span class="text-xs positive-change"></span>
+                                </div>
+                            </div>
+                            <div class="bg-purple-500/10 p-3 rounded-lg">
+                                <i class="fas fa-chart-line text-purple-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+                    <!-- Response Timeline -->
+                    <div class="dashboard-card">
+                        <div class="p-4 border-b border-mid">
+                            <h2 class="text-lg font-medium">Response Timeline</h2>
+                        </div>
+                        <div class="p-4">
+                            <canvas id="timeline-chart" height="250"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Response Distribution -->
+                    <div class="dashboard-card">
+                        <div class="p-4 border-b border-mid">
+                            <h2 class="text-lg font-medium">Response Distribution</h2>
+                        </div>
+                        <div class="p-4">
+                            <canvas id="distribution-chart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Questions Analysis -->
+                <div class="dashboard-card mb-8">
+                    <div class="p-4 border-b border-mid">
+                        <h2 class="text-lg font-medium">Question Analysis</h2>
+                    </div>
+                    <div id="questions-container" class="p-4 space-y-6">
+                        <!-- Will be dynamically populated with question analytics -->
+                        <div class="text-center text-light py-8">
+                            Select a form to view question analysis
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="dashboard-card">
+                    <div class="p-4 border-b border-mid">
+                        <h2 class="text-lg font-medium">Recent Activity</h2>
+                    </div>
+                    <div class="overflow-hidden">
+                        <ul id="activity-list" class="divide-y divide-mid">
+                            <!-- Will be dynamically populated with activities -->
+                            <li class="flex items-start p-4 text-light">
+                                Select a form to view recent activities
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/src/config/supabase.js"></script>
+    <script type="module" src="/public/js/dashboard/analytics.js"></script>
+</body>
+</html>

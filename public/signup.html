@@ -6,6 +6,10 @@
     <title>PollSay - Multi-Step Form</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
+    
+    <!-- Supabase CDN - Only include once! -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
     <script>
         tailwind.config = {
             theme: {
@@ -23,8 +27,8 @@
             }
         }
     </script>
-    <!-- <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script> -->
 </head>
+<!-- ... rest of your HTML ... -->
 <body class="min-h-screen bg-dark font-poppins text-white p-4 grid place-items-center">
     <form id="multi-step-form" class="w-full max-w-[600px] bg-surface rounded-3xl p-8 md:p-12 relative shadow-xl">
         <!-- Step 1: Organization Details -->
@@ -288,6 +292,9 @@
     <!-- Will be styled based on success/error -->
 </div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="/src/config/supabase.js"></script>
 <script type="module" src="/public/js/signup/script.js"></script>
+
+
 </body>
 </html>
