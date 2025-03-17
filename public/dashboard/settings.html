@@ -380,23 +380,16 @@
         </main>
     </div>
     
-    <script type="module">
-        import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
-        import { supabase } from '../../src/config/supabase.js';
-        import { setupNavigationHandlers, enforceClickability } from '../js/navigation.js';
-        
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Initialize common dashboard elements
-            const session = await initializeDashboard();
-            if (!session) return;
-            
-            // Set up navigation handlers
-            setupNavigationHandlers();
-            enforceClickability();
-            
-            // Add code for tab handling, form submissions etc.
-            // ... (rest of settings specific code)
-        });
-    </script>
+    <!-- First load Supabase from CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Then load the supabase-loader as regular script -->
+    <script src="/public/js/supabase-loader.js"></script>
+    
+    <!-- Now load your module scripts -->
+    <script type="module" src="/public/dashboard/settings.js"></script>
+    
+    <!-- Add fallback script in case module loading fails -->
+    <script src="/public/dashboard/settings-fallback.js"></script>
 </body>
 </html>

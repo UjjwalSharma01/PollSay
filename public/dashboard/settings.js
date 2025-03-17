@@ -1,3 +1,4 @@
+// Import statements must be at the top in modules
 import { supabase } from '../../src/config/supabase.js';
 import { setupNavigationHandlers, enforceClickability } from '../js/navigation.js';
 
@@ -11,126 +12,138 @@ let orgData = null;
 let currentOrgId = null;
 let verificationEmailSent = false;
 
+// Initialize DOM functionality after the document is fully loaded
 document.addEventListener('DOMContentLoaded', async () => {
-    // Initialize navigation and enforce clickability
-    setupNavigationHandlers();
-    enforceClickability();
+    console.log("Settings.js DOM content loaded!");
     
-    // Check if user is logged in
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-        window.location.href = '/public/signin.html';
-        return;
-    }
-
-    // User dropdown and avatar handling
-    const userAvatar = document.getElementById('user-avatar');
-    const userDropdown = document.getElementById('user-dropdown');
-    const userName = document.getElementById('user-name');
-    const userEmail = document.getElementById('user-email');
-    const profilePhoto = document.getElementById('profile-photo');
-
-    // User dropdown toggle
-    if (userAvatar && userDropdown) {
-        userAvatar.addEventListener('click', () => {
-            userDropdown.classList.toggle('hidden');
-        });
+    try {
+        // Initialize navigation and enforce clickability
+        setupNavigationHandlers();
+        enforceClickability();
         
-        // Close dropdown when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
-                userDropdown.classList.add('hidden');
-            }
-        });
-    }
+        // Check if user is logged in
+        const { data: { session } } = await supabase.auth.getSession();
+        console.log("Auth session check result:", !!session);
+        
+        if (!session) {
+            window.location.href = '/public/signin.html';
+            return;
+        }
 
-    // Set user info
-    if (userName) userName.textContent = session.user.user_metadata?.full_name || 'User';
-    if (userEmail) userEmail.textContent = session.user.email;
+        // User dropdown and avatar handling
+        const userAvatar = document.getElementById('user-avatar');
+        const userDropdown = document.getElementById('user-dropdown');
+        const userName = document.getElementById('user-name');
+        const userEmail = document.getElementById('user-email');
+        const profilePhoto = document.getElementById('profile-photo');
 
-    // Load user profile data
-    await loadUserProfile(session.user.id, session);
-    
-    // If the user belongs to an organization, load organization data
-    if (userProfile && userProfile.org_id) {
-        currentOrgId = userProfile.org_id;
-        await loadOrganizationData(currentOrgId);
-    }
-
-    // Sign out handler
-    const logoutBtn = document.getElementById('logout-btn');
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', async () => {
-            try {
-                await supabase.auth.signOut();
-                window.location.href = '/public/signin.html';
-            } catch (error) {
-                console.error('Error signing out:', error);
-                displayAlert('Failed to sign out. Please try again.', 'error');
-            }
-        });
-    }
-
-    // Check URL for tab parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const tabParam = urlParams.get('tab');
-    const hashFragment = window.location.hash.substring(1);
-    const initialTab = tabParam || hashFragment || 'profile';
-
-    // Tab switching
-    const tabButtons = document.querySelectorAll('.tab-button');
-    const tabContents = document.querySelectorAll('.tab-content');
-
-    // Setup tab switching functionality
-    tabButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            activateTab(button.getAttribute('data-tab'), tabButtons, tabContents);
+        // User dropdown toggle
+        if (userAvatar && userDropdown) {
+            console.log("Setting up user dropdown");
+            userAvatar.addEventListener('click', () => {
+                userDropdown.classList.toggle('hidden');
+            });
             
-            // Update URL without page reload
-            const url = new URL(window.location);
-            url.searchParams.set('tab', button.getAttribute('data-tab'));
-            window.history.pushState({}, '', url);
-        });
-    });
+            // Close dropdown when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
+                    userDropdown.classList.add('hidden');
+                }
+            });
+        }
 
-    // Activate initial tab from URL parameter or hash
-    const targetTabButton = document.querySelector(`.tab-button[data-tab="${initialTab}"]`);
-    if (targetTabButton) {
-        activateTab(initialTab, tabButtons, tabContents);
-    }
+        // Set user info
+        if (userName) userName.textContent = session.user.user_metadata?.full_name || 'User';
+        if (userEmail) userEmail.textContent = session.user.email;
 
-    // Email security verification toggle handler
-    const securityEmailToggle = document.getElementById('toggle-security-email');
-    if (securityEmailToggle) {
-        securityEmailToggle.checked = userProfile?.security_email_verification || false;
+        // Load user profile data
+        await loadUserProfile(session.user.id, session);
         
-        securityEmailToggle.addEventListener('change', async () => {
-            try {
-                const { error } = await supabase
-                    .from('profiles')
-                    .update({ security_email_verification: securityEmailToggle.checked })
-                    .eq('id', session.user.id);
-                    
-                if (error) throw error;
-                
-                displayAlert(
-                    securityEmailToggle.checked 
-                        ? 'Email verification for sensitive actions enabled' 
-                        : 'Email verification for sensitive actions disabled',
-                    'success'
-                );
-            } catch (error) {
-                console.error('Error updating security settings:', error);
-                displayAlert('Failed to update security settings', 'error');
-                // Reset toggle to previous state
-                securityEmailToggle.checked = !securityEmailToggle.checked;
-            }
-        });
-    }
+        // If the user belongs to an organization, load organization data
+        if (userProfile && userProfile.org_id) {
+            currentOrgId = userProfile.org_id;
+            await loadOrganizationData(currentOrgId);
+        }
 
-    setupPhotoUpload(session.user.id);
-    setupFormHandlers(session);
-    setupDataManagementHandlers(session);
+        // Sign out handler
+        const logoutBtn = document.getElementById('logout-btn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await supabase.auth.signOut();
+                    window.location.href = '/public/signin.html';
+                } catch (error) {
+                    console.error('Error signing out:', error);
+                    displayAlert('Failed to sign out. Please try again.', 'error');
+                }
+            });
+        }
+
+        // Check URL for tab parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const tabParam = urlParams.get('tab');
+        const hashFragment = window.location.hash.substring(1);
+        const initialTab = tabParam || hashFragment || 'profile';
+
+        // Tab switching
+        const tabButtons = document.querySelectorAll('.tab-button');
+        const tabContents = document.querySelectorAll('.tab-content');
+
+        console.log("Setting up tab switching functionality");
+        // Setup tab switching functionality
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => {
+                activateTab(button.getAttribute('data-tab'), tabButtons, tabContents);
+                
+                // Update URL without page reload
+                const url = new URL(window.location);
+                url.searchParams.set('tab', button.getAttribute('data-tab'));
+                window.history.pushState({}, '', url);
+            });
+        });
+
+        // Activate initial tab from URL parameter or hash
+        const targetTabButton = document.querySelector(`.tab-button[data-tab="${initialTab}"]`);
+        if (targetTabButton) {
+            activateTab(initialTab, tabButtons, tabContents);
+        }
+
+        // Email security verification toggle handler
+        const securityEmailToggle = document.getElementById('toggle-security-email');
+        if (securityEmailToggle) {
+            securityEmailToggle.checked = userProfile?.security_email_verification || false;
+            
+            securityEmailToggle.addEventListener('change', async () => {
+                try {
+                    const { error } = await supabase
+                        .from('profiles')
+                        .update({ security_email_verification: securityEmailToggle.checked })
+                        .eq('id', session.user.id);
+                        
+                    if (error) throw error;
+                    
+                    displayAlert(
+                        securityEmailToggle.checked 
+                            ? 'Email verification for sensitive actions enabled' 
+                            : 'Email verification for sensitive actions disabled',
+                        'success'
+                    );
+                } catch (error) {
+                    console.error('Error updating security settings:', error);
+                    displayAlert('Failed to update security settings', 'error');
+                    // Reset toggle to previous state
+                    securityEmailToggle.checked = !securityEmailToggle.checked;
+                }
+            });
+        }
+
+        setupPhotoUpload(session.user.id);
+        setupFormHandlers(session);
+        setupDataManagementHandlers(session);
+        
+    } catch (err) {
+        console.error("Settings initialization error:", err);
+    }
 });
 
 // Send verification email for sensitive actions

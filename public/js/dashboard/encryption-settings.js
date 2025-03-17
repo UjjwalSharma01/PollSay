@@ -14,6 +14,93 @@ document.addEventListener('DOMContentLoaded', async () => {
   const downloadKeysBtn = document.getElementById('download-keys');
   const passphraseForm = document.getElementById('passphrase-form');
   const encryptionStatus = document.getElementById('encryption-status');
+  const contentContainer = document.querySelector('.max-w-3xl');
+  
+  // Show "Work in Progress" overlay
+  function showWorkInProgressOverlay() {
+    // Create overlay for work in progress message
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black/70 flex items-center justify-center z-50';
+    overlay.innerHTML = `
+      <div class="bg-dark rounded-xl p-8 max-w-lg w-full text-center">
+        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 text-primary mb-4">
+          <i class="fas fa-tools text-3xl"></i>
+        </div>
+        <h2 class="text-2xl font-bold mb-4">Feature Under Development</h2>
+        <p class="text-light mb-6">
+          Our team is currently working on implementing end-to-end encryption for enhanced data security.
+          This feature will be available in an upcoming release.
+        </p>
+        <button id="close-overlay" class="px-6 py-2 bg-primary hover:bg-primary/90 rounded-lg text-white">
+          Got it
+        </button>
+      </div>
+    `;
+    
+    document.body.appendChild(overlay);
+    
+    // Add event listener to close button
+    document.getElementById('close-overlay').addEventListener('click', () => {
+      overlay.remove();
+    });
+    
+    // Disable all controls and add "coming soon" badge
+    if (contentContainer) {
+      const comingSoonBadge = document.createElement('div');
+      comingSoonBadge.className = 'absolute top-0 right-0 bg-primary text-white text-xs font-bold px-2 py-1 rounded-bl-lg';
+      comingSoonBadge.textContent = 'COMING SOON';
+      
+      // Add relative positioning to the cards if they don't have it
+      const cards = document.querySelectorAll('.settings-card');
+      cards.forEach(card => {
+        card.style.position = 'relative';
+        card.style.opacity = '0.7';
+        card.appendChild(comingSoonBadge.cloneNode(true));
+      });
+    }
+    
+    // Disable all interactive elements
+    const buttons = document.querySelectorAll('button');
+    const inputs = document.querySelectorAll('input');
+    
+    buttons.forEach(button => {
+      if (button.id !== 'close-overlay') {
+        button.disabled = true;
+        button.classList.add('opacity-50', 'cursor-not-allowed');
+      }
+    });
+    
+    inputs.forEach(input => {
+      input.disabled = true;
+      input.classList.add('opacity-50', 'cursor-not-allowed');
+    });
+  }
+
+  try {
+    // Check if user is logged in
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
+      window.location.href = '/public/signin.html';
+      return;
+    }
+    
+    // Set default status while checking
+    if (encryptionStatus) {
+      encryptionStatus.innerHTML = `
+        <i class="fas fa-lock text-yellow-500 mr-2"></i>
+        <span>End-to-end encryption is coming soon</span>
+      `;
+    }
+    
+    // Show work in progress overlay
+    showWorkInProgressOverlay();
+    
+  } catch (error) {
+    console.error('Error initializing encryption settings:', error);
+    
+    // Show work in progress message as fallback for errors
+    showWorkInProgressOverlay();
+  }
   
   // Check if organization has encryption keys
   let orgId;
@@ -21,24 +108,45 @@ document.addEventListener('DOMContentLoaded', async () => {
   
   async function initializeEncryptionStatus() {
     try {
-      // Get user's organization
+      // Set default status while checking
+      encryptionStatus.innerHTML = `
+        <i class="fas fa-spinner fa-spin text-light mr-2"></i>
+        <span>Checking encryption status...</span>
+      `;
+      
+      // Get user's organization with proper headers and error handling
       const { data: orgData, error: orgError } = await supabase
         .from('team_members')
         .select('org_id')
-        .eq('user_id', session.user.id)
-        .single();
+        .eq('user_id', session.user.id);
         
-      if (orgError) throw orgError;
-      orgId = orgData.org_id;
+      if (orgError) {
+        console.error('Error fetching organization:', orgError);
+        showErrorStatus('Unable to fetch organization details');
+        return;
+      }
+      
+      if (!orgData || orgData.length === 0) {
+        showErrorStatus('No organization found. Please create or join an organization first.');
+        disableEncryptionControls();
+        return;
+      }
+      
+      orgId = orgData[0].org_id;
       
       // Check for existing keys
       const { data: keyData, error: keyError } = await supabase
         .from('organization_keys')
         .select('id')
-        .eq('id', orgId)
-        .single();
+        .eq('id', orgId);
         
-      if (!keyError && keyData) {
+      if (keyError) {
+        console.error('Error fetching encryption keys:', keyError);
+        showErrorStatus('Unable to verify encryption status');
+        return;
+      }
+      
+      if (keyData && keyData.length > 0) {
         hasKeys = true;
         encryptionStatus.innerHTML = `
           <i class="fas fa-lock text-green-500 mr-2"></i>
@@ -52,7 +160,23 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.error('Error checking encryption status:', error);
+      showErrorStatus('An error occurred while checking encryption status');
     }
+  }
+  
+  function showErrorStatus(message) {
+    encryptionStatus.innerHTML = `
+      <i class="fas fa-exclamation-triangle text-red-500 mr-2"></i>
+      <span>${message}</span>
+    `;
+  }
+  
+  function disableEncryptionControls() {
+    // Disable buttons if there's no organization
+    generateKeysBtn.disabled = true;
+    generateKeysBtn.classList.add('opacity-50', 'cursor-not-allowed');
+    downloadKeysBtn.disabled = true;
+    downloadKeysBtn.classList.add('opacity-50', 'cursor-not-allowed');
   }
   
   // Generate Keys

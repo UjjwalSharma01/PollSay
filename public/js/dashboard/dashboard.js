@@ -23,6 +23,41 @@ document.addEventListener('DOMContentLoaded', async () => {
   const copyLinkBtn = document.getElementById('copy-link-btn');
   const encryptionNotice = document.getElementById('encryption-notice');
 
+  // Fix user dropdown functionality
+  setupUserDropdown();
+
+  // Function to set up user dropdown
+  function setupUserDropdown() {
+    const userAvatar = document.getElementById('user-avatar');
+    const userDropdown = document.getElementById('user-dropdown');
+    
+    if (userAvatar && userDropdown) {
+      userAvatar.style.cursor = 'pointer';
+      
+      // Add click event listener
+      userAvatar.addEventListener('click', (e) => {
+        e.stopPropagation();
+        userDropdown.classList.toggle('hidden');
+      });
+      
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (userDropdown && !userAvatar.contains(e.target) && !userDropdown.contains(e.target)) {
+          userDropdown.classList.add('hidden');
+        }
+      });
+      
+      // Ensure dropdown is properly positioned
+      userAvatar.addEventListener('mouseenter', () => {
+        userAvatar.style.opacity = '0.9';
+      });
+      
+      userAvatar.addEventListener('mouseleave', () => {
+        userAvatar.style.opacity = '1';
+      });
+    }
+  }
+
   // Create form button
   if (createFormBtn) {
     createFormBtn.addEventListener('click', () => {

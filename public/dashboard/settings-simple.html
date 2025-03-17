@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings | PollSay</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Load Supabase first to ensure it's available -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Initialize supabase early
+        window.addEventListener('DOMContentLoaded', () => {
+            if (!window.supabaseClient) {
+                const SUPABASE_URL = "https://hqrqmgamnjrpkvalaopl.supabase.co";
+                const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcnFtZ2FtbmpycGt2YWxhb3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3Njc2NDEsImV4cCI6MjA1MjM0MzY0MX0.oCAwphEjbuecQhWrhybc3q3fIjncvDIYJkjWTxxNjlg";
+                window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log("Supabase initialized in settings-simple.html");
+            }
+        });
+    </script>
+    
+    <style>
+        body { background-color: #171717; color: #ffffff; font-family: 'Inter', sans-serif; }
+        .card { background-color: #262626; border-radius: 0.75rem; overflow: hidden; margin: 2rem auto; max-width: 600px; }
+    </style>
+</head>
+<body>
+    <div class="container mx-auto p-4">
+        <h1 class="text-2xl font-bold mb-6 text-center">Settings</h1>
+        
+        <div class="card p-6">
+            <h2 class="text-xl mb-4">Profile Information</h2>
+            <form id="profile-form" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-light mb-1">Full Name</label>
+                    <input type="text" id="full-name" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-light mb-1">Display Name</label>
+                    <input type="text" id="display-name" class="w-full px-3 py-2 bg-dark border border-mid rounded-lg text-white focus:outline-none">
+                </div>
+                <div>
+                    <button type="submit" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-lg">Save Changes</button>
+                </div>
+                <div id="status" class="mt-4 text-center"></div>
+            </form>
+        </div>
+        
+        <div class="text-center mt-4">
+            <a href="/public/dashboard/settings.html" class="text-purple-400 hover:underline">Go to Full Settings</a>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const profileForm = document.getElementById('profile-form');
+            const fullName = document.getElementById('full-name');
+            const displayName = document.getElementById('display-name');
+            const status = document.getElementById('status');
+            
+            try {
+                // Check auth status
+                const { data: { session } } = await window.supabaseClient.auth.getSession();
+                if (!session) {
+                    window.location.href = '/public/signin.html';
+                    return;
+                }
+                
+                // Try to get user profile
+                const { data, error } = await window.supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (data) {
+                    fullName.value = data.full_name || '';
+                    displayName.value = data.display_name || '';
+                } else {
+                    // Create a new profile if doesn't exist
+                    const { data: newProfile } = await window.supabaseClient
+                        .from('profiles')
+                        .upsert({
+                            id: session.user.id,
+                            full_name: session.user.user_metadata?.full_name || '',
+                            display_name: session.user.user_metadata?.full_name || ''
+                        })
+                        .select();
+                    
+                    if (newProfile && newProfile.length > 0) {
+                        fullName.value = newProfile[0].full_name || '';
+                        displayName.value = newProfile[0].display_name || '';
+                    }
+                }
+                
+                // Handle form submission
+                profileForm.addEventListener('submit', async (e) => {
+                    e.preventDefault();
+                    status.textContent = "Saving...";
+                    
+                    try {
+                        const { error } = await window.supabaseClient
+                            .from('profiles')
+                            .update({
+                                full_name: fullName.value,
+                                display_name: displayName.value
+                            })
+                            .eq('id', session.user.id);
+                        
+                        if (error) throw error;
+                        
+                        status.textContent = "Profile updated successfully!";
+                        status.className = "mt-4 text-center text-green-400";
+                    } catch (error) {
+                        console.error('Error updating profile:', error);
+                        status.textContent = "Error updating profile!";
+                        status.className = "mt-4 text-center text-red-400";
+                    }
+                });
+            } catch (err) {
+                console.error('Error initializing:', err);
+                status.textContent = "Error initializing. Please try again.";
+                status.className = "mt-4 text-center text-red-400";
+            }
+        });
+    </script>
+</body>
+</html>
