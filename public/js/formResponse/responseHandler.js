@@ -253,18 +253,81 @@ document.addEventListener('DOMContentLoaded', async () => {
       formFieldsElement.appendChild(fieldElement);
     });
     
-    // Add name visibility option
+    // Create the name visibility div and add it properly
     const nameVisibilityDiv = document.createElement('div');
     nameVisibilityDiv.className = 'mb-6 p-4 bg-white rounded-xl shadow';
-    nameVisibilityDiv.innerHTML = `
-      <div class="flex items-center">
-        <input type="checkbox" id="show-real-name" class="mr-2">
-        <label for="show-real-name" class="text-gray-800">Show my real name instead of pseudonym</label>
-      </div>
-      <p class="text-sm text-gray-500 mt-1">
-        If unchecked, your response will be anonymous with a pseudonym.
-      </p>
-    `;
+    
+    // We'll use direct DOM creation rather than innerHTML to avoid potential issues
+    const flexContainer = document.createElement('div');
+    flexContainer.className = 'flex items-center';
+    
+    // Create checkbox with proper event handling
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.id = 'show-real-name';
+    checkbox.className = 'mr-2';
+    
+    // Improved checkbox handling to fix name resolution issue
+    checkbox.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Toggle checked state manually
+      this.checked = !this.checked;
+      
+      // Update the visual state and add a data attribute for tracking
+      if(this.checked) {
+        this.setAttribute('checked', 'checked');
+        this.setAttribute('data-checked', 'true');
+      } else {
+        this.removeAttribute('checked');
+        this.setAttribute('data-checked', 'false');
+      }
+      
+      console.log('Checkbox state toggled:', this.checked);
+      return false;
+    });
+    
+    // Create label and make it update the checkbox correctly
+    const label = document.createElement('label');
+    label.htmlFor = 'show-real-name';
+    label.className = 'text-gray-800';
+    label.textContent = 'Show my real name instead of pseudonym';
+    
+    // Make the label also toggle the checkbox with improved handling
+    label.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      
+      // Manually toggle the checkbox
+      const cb = document.getElementById('show-real-name');
+      if (cb) {
+        cb.checked = !cb.checked;
+        
+        // Update data-checked attribute for state tracking
+        if(cb.checked) {
+          cb.setAttribute('checked', 'checked');
+          cb.setAttribute('data-checked', 'true');
+        } else {
+          cb.removeAttribute('checked');
+          cb.setAttribute('data-checked', 'false');
+        }
+        
+        console.log('Checkbox toggled by label, now:', cb.checked);
+      }
+      return false;
+    });
+    
+    // Add description text
+    const description = document.createElement('p');
+    description.className = 'text-sm text-gray-500 mt-1';
+    description.textContent = 'If unchecked, your response will be anonymous with a pseudonym.';
+    
+    // Assemble the elements
+    flexContainer.appendChild(checkbox);
+    flexContainer.appendChild(label);
+    nameVisibilityDiv.appendChild(flexContainer);
+    nameVisibilityDiv.appendChild(description);
     
     formFieldsElement.appendChild(nameVisibilityDiv);
     
@@ -321,30 +384,60 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Calculate completion time
         const completionTime = Math.floor((Date.now() - startTime) / 1000);
         
-        // Get respondent info from session if available
+        // Get respondent info from session if available - Fixed potential null issues
         const email = sessionStorage.getItem('respondent_email') || null;
         const pseudonym = sessionStorage.getItem('respondent_pseudonym') || null;
-        const showRealName = document.getElementById('show-real-name')?.checked || false;
+        
+        // Enhanced checkbox state detection with multiple fallbacks
+        const checkbox = document.getElementById('show-real-name');
+        let showRealName = false;
+        
+        if (checkbox) {
+          // Check multiple properties to ensure we capture the state correctly
+          showRealName = checkbox.checked || 
+                         checkbox.getAttribute('checked') === 'checked' || 
+                         checkbox.getAttribute('data-checked') === 'true' ||
+                         checkbox.classList.contains('real-name-checked');
+                         
+          console.log('Checkbox detection details:', {
+            'property.checked': checkbox.checked,
+            'attr.checked': checkbox.getAttribute('checked'),
+            'data-checked': checkbox.getAttribute('data-checked'),
+            'classList': checkbox.classList.contains('real-name-checked')
+          });
+        }
+        
+        console.log('Using name display mode:', showRealName ? 'real name' : 'pseudonym');
         
         if (isEncrypted) {
           // For encrypted forms
           try {
-            // Create encryption response data
+            // Create encryption response data with safety checks
             const encryptedResponseData = { 
               responses, 
-              timestamp: new Date().toISOString(),
-              email: showRealName ? email : null
+              timestamp: new Date().toISOString()
             };
             
-            // In a real implementation, the form's public key would be used here
-            const { data, error } = await supabase.from('encrypted_responses').insert({
+            if (email && showRealName) {
+              encryptedResponseData.email = email;
+            }
+            
+            // Request data with safety checks
+            const requestData = {
               form_id: formData.id,
-              respondent_email: showRealName ? email : null,
-              respondent_pseudonym: showRealName ? null : pseudonym,
-              show_real_name: showRealName,
               completion_time: completionTime,
               encrypted_data: JSON.stringify(encryptedResponseData)
-            }).select();
+            };
+            
+            // Only add these fields if we have values
+            if (showRealName && email) requestData.respondent_email = email;
+            if (!showRealName && pseudonym) requestData.respondent_pseudonym = pseudonym;
+            if (typeof showRealName === 'boolean') requestData.show_real_name = showRealName;
+            
+            // Submit to database with error handling
+            const { data, error } = await supabase.from('encrypted_responses')
+              .insert([requestData])
+              .select();
             
             if (error) {
               console.error('Encrypted response submission error:', error);
@@ -360,8 +453,14 @@ document.addEventListener('DOMContentLoaded', async () => {
           // For unencrypted forms - use absolute minimal data to avoid any schema issues
           const minimalResponseData = {
             form_id: formData.id,
-            responses: responses
+            responses: responses,
+            completion_time: completionTime,
+            show_real_name: showRealName // Explicitly include this field
           };
+          
+          // Only add these fields if they have valid values to prevent errors
+          if (showRealName && email) minimalResponseData.respondent_email = email;
+          if (!showRealName && pseudonym) minimalResponseData.respondent_pseudonym = pseudonym;
           
           console.log('Submitting form response with minimal data:', minimalResponseData);
           

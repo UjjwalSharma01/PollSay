@@ -725,4 +725,57 @@ document.addEventListener('DOMContentLoaded', async () => {
       return 'just now';
     }
   }
+
+  // Load form data
+  async function loadFormData(formId) {
+    try {
+      // Fetch form details
+      const { data: form, error: formError } = await supabase
+        .from('forms')
+        .select('*, encrypted_responses(*), form_responses(*)')
+        .eq('id', formId)
+        .single();
+
+      if (formError) throw formError;
+
+      currentForm = form;
+      
+      // Check if form is encrypted
+      const isEncrypted = form.encrypted;
+      
+      // Get form responses (regular)
+      const { data: responses, error: responsesError } = await supabase
+        .from('form_responses')
+        .select('*')
+        .eq('form_id', formId);
+        
+      if (responsesError) throw responsesError;
+      
+      // Get encrypted responses
+      const { data: encryptedResponses, error: encryptedError } = await supabase
+        .from('encrypted_responses')
+        .select('*')
+        .eq('form_id', formId);
+        
+      if (encryptedError) throw encryptedError;
+      
+      // Initialize arrays if they're null or undefined
+      const formattedResponses = Array.isArray(responses) ? responses : [];
+      const formattedEncryptedResponses = Array.isArray(encryptedResponses) ? encryptedResponses : [];
+      
+      // Update metrics with actual counts
+      document.getElementById('total-responses').textContent = 
+        (formattedResponses.length + formattedEncryptedResponses.length).toString();
+      
+      // Process responses for analytics
+      updateKeyMetrics(formattedResponses.concat(formattedEncryptedResponses));
+      createResponseTimeline(formattedResponses.concat(formattedEncryptedResponses));
+      createResponseDistribution(form, formattedResponses.concat(formattedEncryptedResponses));
+      renderQuestionAnalysis(form, formattedResponses.concat(formattedEncryptedResponses), isEncrypted);
+      renderRecentActivity(formattedResponses.concat(formattedEncryptedResponses));
+      
+    } catch (error) {
+      console.error('Error loading form data:', error);
+    }
+  }
 });

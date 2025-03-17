@@ -112,17 +112,61 @@
 
     <!-- Scripts -->
     <script>
-        // Helper function to handle checkbox clicks safely
-        function handleNameCheckbox() {
-            const checkbox = document.getElementById('show-real-name');
-            if (checkbox) {
-                checkbox.addEventListener('click', function(e) {
+        /**
+         * Improved checkbox handling with additional safeguards
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            // Apply a global style for improved checkbox visibility
+            const style = document.createElement('style');
+            style.textContent = `
+                input[type="checkbox"][data-checked="true"] + label,
+                input[type="checkbox"]:checked + label,
+                input[type="checkbox"].real-name-checked + label {
+                    color: #7C4DFF;
+                    font-weight: 500;
+                }
+            `;
+            document.head.appendChild(style);
+            
+            // Enhanced global checkbox handler with better state management
+            document.body.addEventListener('click', function(e) {
+                // If it's our special checkbox or its label
+                if ((e.target.id === 'show-real-name' || 
+                    (e.target.tagName === 'LABEL' && e.target.htmlFor === 'show-real-name'))) {
+                    
+                    // Get the actual checkbox
+                    const checkbox = document.getElementById('show-real-name');
+                    if (!checkbox) return;
+                    
+                    e.preventDefault();
                     e.stopPropagation();
-                });
-            }
-        }
-        // Initialize when DOM is ready
-        document.addEventListener('DOMContentLoaded', handleNameCheckbox);
+                    
+                    // Toggle state without default browser behavior
+                    checkbox.checked = !checkbox.checked;
+                    
+                    // Update all possible state indicators for maximum compatibility
+                    if (checkbox.checked) {
+                        checkbox.setAttribute('checked', 'checked');
+                        checkbox.setAttribute('data-checked', 'true');
+                        checkbox.classList.add('real-name-checked');
+                    } else {
+                        checkbox.removeAttribute('checked');
+                        checkbox.setAttribute('data-checked', 'false');
+                        checkbox.classList.remove('real-name-checked');
+                    }
+                    
+                    console.log('Checkbox state:', checkbox.checked);
+                    console.log('Checkbox attributes:', {
+                        'property.checked': checkbox.checked,
+                        'attr.checked': checkbox.getAttribute('checked'),
+                        'data-checked': checkbox.getAttribute('data-checked'),
+                        'classList': checkbox.classList.contains('real-name-checked')
+                    });
+                    
+                    return false;
+                }
+            }, true); // Use capturing phase
+        });
     </script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>

@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkbox Test | PollSay</title>
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const regularCheckbox = document.getElementById('regular-checkbox');
+      const safeCheckbox = document.getElementById('safe-checkbox');
+      const statusDiv = document.getElementById('status');
+      
+      // Safe checkbox implementation with visual feedback
+      safeCheckbox.addEventListener('click', function(event) {
+        event.stopPropagation();
+        event.preventDefault();
+        
+        // Toggle state and update attribute for visual feedback
+        this.checked = !this.checked;
+        if(this.checked) {
+          this.setAttribute('checked', 'checked');
+        } else {
+          this.removeAttribute('checked');
+        }
+        
+        // Update status with current state
+        statusDiv.textContent = `Safe checkbox clicked. Checked: ${this.checked}`;
+        
+        // Highlight the checkbox container to show it worked
+        const container = document.getElementById('safe-container');
+        container.style.backgroundColor = this.checked ? '#e6ffe6' : '#ffffff';
+        
+        return false;
+      });
+      
+      // Regular checkbox for comparison
+      regularCheckbox.addEventListener('click', function() {
+        statusDiv.textContent = `Regular checkbox clicked. Checked: ${this.checked}`;
+        // Highlight the container
+        const container = document.getElementById('regular-container');
+        container.style.backgroundColor = this.checked ? '#e6ffe6' : '#ffffff';
+      });
+    });
+  </script>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .checkbox-container { margin: 20px 0; padding: 15px; border: 1px solid #ddd; transition: background-color 0.3s; }
+    #status { margin-top: 20px; padding: 10px; background: #f5f5f5; }
+    .checked { background-color: #e6ffe6; }
+  </style>
+</head>
+<body>
+  <h1>Checkbox Behavior Test</h1>
+  <p>This page tests different checkbox implementations to fix the name resolution error.</p>
+  
+  <div id="regular-container" class="checkbox-container">
+    <h2>Regular Checkbox (May Cause Issues)</h2>
+    <input type="checkbox" id="regular-checkbox">
+    <label for="regular-checkbox">Show my real name</label>
+  </div>
+  
+  <div id="safe-container" class="checkbox-container">
+    <h2>Safe Checkbox (Fixed Implementation)</h2>
+    <input type="checkbox" id="safe-checkbox">
+    <label for="safe-checkbox">Show my real name</label>
+  </div>
+  
+  <div id="status">Click a checkbox to see status</div>
+  
+  <div style="margin-top: 30px;">
+    <p><strong>Implementation Notes:</strong></p>
+    <ul>
+      <li>The safe checkbox uses event.stopPropagation() and event.preventDefault()</li>
+      <li>We manually toggle the checked state to avoid default browser behavior</li>
+      <li>We explicitly set/remove the checked attribute for visual feedback</li>
+      <li>This avoids any network requests that might be triggered by the checkbox</li>
+    </ul>
+  </div>
+</body>
+</html>
