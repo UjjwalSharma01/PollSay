@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    
+
     <script>
         tailwind.config = {
             theme: {
@@ -28,25 +28,28 @@
             }
         }
     </script>
-    
+
     <style>
         body {
             background-color: #171717;
             color: #ffffff;
             font-family: 'Inter', sans-serif;
         }
-        
+
         .field-card {
             background-color: #262626;
             border-radius: 0.75rem;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-        
+
         .field-card:hover {
             border-color: rgba(124, 77, 255, 0.5);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+            transform: translateY(-2px);
         }
-        
+
         .dragging {
             opacity: 0.5;
             border: 2px dashed rgba(124, 77, 255, 0.5);
@@ -54,31 +57,80 @@
 
         .dropdown-content {
             display: none;
+            animation: fadeDown 0.3s ease-out forwards;
         }
-        
+
+        @keyframes fadeDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .dropdown:hover .dropdown-content {
             display: block;
         }
 
+        /* Improved form controls */
+        input, textarea {
+            transition: all 0.3s ease;
+        }
+        
+        input:focus, textarea:focus {
+            box-shadow: 0 0 0 3px rgba(124, 77, 255, 0.3);
+        }
+        
+        /* Button animations */
+        #add-field, #save-form {
+            transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+        }
+        
+        #add-field:hover, #save-form:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        /* Coming soon badge */
         .coming-soon-badge {
             position: absolute;
             top: -8px;
-            right: -8px;
-            background: linear-gradient(to right, #FF6B6B, #FF8E53);
-            color: white;
-            font-size: 0.6rem;
+            right: -10px;
+            background-color: #f59e0b;
+            color: #000;
+            font-size: 10px;
             font-weight: 600;
-            padding: 0.2rem 0.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            transform: rotate(5deg);
+            padding: 2px 6px;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            transform: rotate(3deg);
+        }
+        
+        /* Form fields entrance animation */
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        #form-fields > div {
+            animation: slideIn 0.5s ease-out forwards;
+        }
+        
+        /* Pulse animation for save button */
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(124, 77, 255, 0.4); }
+            70% { box-shadow: 0 0 0 10px rgba(124, 77, 255, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(124, 77, 255, 0); }
+        }
+        
+        .pulse {
             animation: pulse 2s infinite;
         }
         
-        @keyframes pulse {
-            0% { transform: rotate(5deg) scale(1); }
-            50% { transform: rotate(5deg) scale(1.1); }
-            100% { transform: rotate(5deg) scale(1); }
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(90deg, #7C4DFF 0%, #00B8D4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
         }
     </style>
 </head>
@@ -89,7 +141,7 @@
             <div class="p-6">
                 <h1 class="text-2xl font-bold bg-gradient-to-r from-primary to-secondary text-transparent bg-clip-text">PollSay</h1>
             </div>
-            
+
             <nav class="mt-6">
                 <a href="/public/dashboard/index.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
                     <i class="fas fa-home mr-3"></i> Dashboard
@@ -100,7 +152,7 @@
                 <a href="#" class="flex items-center px-6 py-3 bg-mid text-white transition-colors">
                     <i class="fas fa-clipboard-list mr-3"></i> Forms
                 </a>
-                <a href="/public/dashboard/team.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
+                <a href="#" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
                     <i class="fas fa-users mr-3"></i> Team
                 </a>
                 <a href="/public/dashboard/encryption-settings.html" class="flex items-center px-6 py-3 text-light hover:bg-mid hover:text-white transition-colors">
@@ -111,48 +163,48 @@
 
         <!-- Main Content -->
         <main class="flex-1 overflow-y-auto">
-            <!-- Top Bar -->
-            <header class="bg-dark border-b border-mid p-4">
+            <!-- Top Bar with enhanced styling -->
+            <header class="bg-dark border-b border-mid p-4 sticky top-0 z-10 shadow-lg">
                 <div class="flex justify-between items-center">
                     <div>
-                        <h1 class="text-xl font-semibold">Create Form</h1>
+                        <h1 class="text-xl font-semibold gradient-text">Create Form</h1>
                     </div>
                     <div class="flex items-center gap-4">
-                        <!-- Restored encryption button with "Coming Soon" badge -->
+                        <!-- Encryption toggle with Coming Soon badge -->
                         <div class="relative">
-                            <button id="toggle-encryption" disabled class="flex items-center px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors opacity-90 sm:flex hidden">
-                                <i class="fas fa-lock mr-2"></i> Encryption
+                            <button id="toggle-encryption" disabled class="relative flex items-center px-4 py-2 bg-gray-500 text-white rounded-lg transition-colors opacity-80 cursor-not-allowed">
+                                <i class="fas fa-lock mr-2"></i> Encryption: OFF
+                                <span class="coming-soon-badge">Coming Soon</span>
                             </button>
-                            <span class="coming-soon-badge sm:flex hidden">Coming Soon!</span>
                         </div>
-                        
-                        <button id="save-form" class="flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors">
+
+                        <button id="save-form" class="flex items-center px-4 py-2 bg-primary hover:bg-primary/90 text-white rounded-lg transition-all duration-300 shadow-md hover:shadow-lg pulse">
                             <i class="fas fa-save mr-2"></i> Save Form
                         </button>
                     </div>
                 </div>
             </header>
 
-            <!-- Form Building Area -->
-            <div class="p-6">
+            <!-- Form Building Area with improved visual appeal -->
+            <div class="p-6 bg-gradient-to-b from-background to-dark/80">
                 <div id="form-builder" class="max-w-4xl mx-auto">
-                    <!-- Form Title and Description -->
-                    <div class="bg-dark p-6 rounded-xl mb-6 border border-mid">
+                    <!-- Form Title and Description with enhanced styling -->
+                    <div class="bg-dark p-6 rounded-xl mb-6 border border-mid shadow-lg hover:border-primary/30 transition-all duration-300">
                         <div class="mb-4">
                             <label for="form-title" class="block text-sm font-medium text-light mb-1">Form Title</label>
-                            <input type="text" id="form-title" class="w-full px-3 py-2 bg-mid border-none rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Enter form title">
+                            <input type="text" id="form-title" class="w-full px-3 py-2 bg-mid border-none rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-inner" placeholder="Enter form title">
                         </div>
-                        
+
                         <div>
                             <label for="form-description" class="block text-sm font-medium text-light mb-1">Description</label>
-                            <textarea id="form-description" rows="3" class="w-full px-3 py-2 bg-mid border-none rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/30" placeholder="Enter form description"></textarea>
+                            <textarea id="form-description" rows="3" class="w-full px-3 py-2 bg-mid border-none rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary/30 shadow-inner" placeholder="Enter form description"></textarea>
                         </div>
 
                         <div class="mt-4 flex items-center justify-between">
                             <div class="flex items-center">
-                                <label class="inline-flex items-center cursor-pointer">
+                                <label class="inline-flex items-center cursor-pointer group">
                                     <input type="checkbox" id="form-is-public" class="sr-only peer">
-                                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary group-hover:ring-2 group-hover:ring-primary/20"></div>
                                     <span class="ml-3 text-sm font-medium text-light">Make form public</span>
                                 </label>
                                 <div class="ml-2 text-gray-400 text-xs">
@@ -161,61 +213,27 @@
                             </div>
                         </div>
                     </div>
-                    
-                    <!-- Commented out Participation Restrictions Section for future implementation -->
-                    <!--
-                    <section id="participation-restrictions" class="mt-6 p-4 bg-dark rounded-xl border border-mid">
-                      <h3 class="text-xl font-semibold text-light mb-2">Participation Restrictions</h3>
-                      <div class="mb-4">
-                        <label for="allowed-domain" class="block text-sm font-medium text-light">Allowed Email Domain (optional)</label>
-                        <input type="text" id="allowed-domain" name="allowedDomain" placeholder="@google.com" 
-                               class="w-full px-3 py-2 bg-mid border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary">
-                      </div>
-                      <div>
-                        <label for="invited-emails" class="block text-sm font-medium text-light">Invited Emails (comma separated, optional)</label>
-                        <textarea id="invited-emails" name="invitedEmails" rows="2" 
-                                  class="w-full px-3 py-2 bg-mid border border-mid rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-primary" 
-                                  placeholder="user1@example.com, user2@example.com"></textarea>
-                      </div>
-                    </section>
-                    -->
 
-                    <!-- Form Security Notice -->
-                    <div class="form-options-panel p-4 bg-dark/50 rounded-lg mb-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center">
-                                <i class="fas fa-shield-alt text-secondary mr-2"></i>
-                                <span class="text-sm font-medium">Form Security</span>
-                                <div class="ml-2 px-2 py-0.5 bg-gradient-to-r from-orange-500 to-pink-500 text-xs text-white rounded-full animate-pulse">
-                                    End-to-end encryption coming soon
-                                </div>
-                            </div>
-                            <a href="/public/dashboard/settings.html?tab=security" class="text-xs text-primary hover:underline">
-                                Security Settings
-                            </a>
-                        </div>
-                    </div>
-
-                    <!-- Form Fields -->
-                    <div id="form-fields" class="space-y-4 mb-6">
+                    <!-- Form Fields with spacing for better readability -->
+                    <div id="form-fields" class="space-y-6 mb-6">
                         <!-- Fields will be added here dynamically -->
                     </div>
-                    
-                    <!-- Add Field Button -->
+
+                    <!-- Add Field Button with improved hover effect -->
                     <div class="mb-8">
                         <div class="dropdown relative">
-                            <button id="add-field" class="w-full bg-dark hover:bg-mid border border-mid hover:border-primary/30 py-3 text-light rounded-xl transition-all flex items-center justify-center">
-                                <i class="fas fa-plus mr-2"></i> Add Question
+                            <button id="add-field" class="w-full bg-dark hover:bg-mid border border-mid hover:border-primary/30 py-4 text-light rounded-xl transition-all flex items-center justify-center shadow-md hover:shadow-xl">
+                                <i class="fas fa-plus mr-2 text-primary"></i> Add Question
                             </button>
-                            
+
                             <div class="dropdown-content absolute left-0 right-0 mt-2 bg-dark rounded-xl border border-mid overflow-hidden shadow-xl z-10">
-                                <button data-type="text" class="w-full px-4 py-3 text-left hover:bg-mid text-light flex items-center">
+                                <button data-type="text" class="w-full px-4 py-3 text-left hover:bg-primary/10 text-light flex items-center transition-all">
                                     <i class="fas fa-font mr-2 text-primary"></i> Text Input
                                 </button>
-                                <button data-type="textarea" class="w-full px-4 py-3 text-left hover:bg-mid text-light flex items-center">
+                                <button data-type="textarea" class="w-full px-4 py-3 text-left hover:bg-primary/10 text-light flex items-center transition-all">
                                     <i class="fas fa-align-left mr-2 text-primary"></i> Paragraph
                                 </button>
-                                <button data-type="multiple_choice" class="w-full px-4 py-3 text-left hover:bg-mid text-light flex items-center">
+                                <button data-type="multiple_choice" class="w-full px-4 py-3 text-left hover:bg-primary/10 text-light flex items-center transition-all">
                                     <i class="fas fa-list-ul mr-2 text-primary"></i> Multiple Choice
                                 </button>
                             </div>
@@ -226,26 +244,29 @@
         </main>
     </div>
 
-    <!-- Field Templates (hidden) -->
+    <!-- Field Templates (enhanced with better styling) -->
     <template id="text-field-template">
         <div class="field-card p-6" data-type="text">
             <div class="flex justify-between mb-4">
                 <input type="text" class="question-text w-full bg-transparent border-b border-gray-600 text-white text-lg focus:border-primary focus:outline-none" placeholder="Question text" />
-                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4">
+                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4 p-1 hover:bg-red-500/10 rounded-full">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
+            <div class="bg-mid/30 rounded-lg p-3 text-light text-sm mb-4">
+                <i class="fas fa-font mr-2"></i> Short text answer
+            </div>
             <div class="flex items-center justify-between mt-4">
-                <label class="inline-flex items-center cursor-pointer">
+                <label class="inline-flex items-center cursor-pointer group">
                     <input type="checkbox" class="required-toggle sr-only peer">
-                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary group-hover:ring-2 group-hover:ring-primary/20"></div>
                     <span class="ml-3 text-sm font-medium text-gray-300">Required</span>
                 </label>
                 <div class="flex space-x-2">
-                    <button class="move-up text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-up text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button class="move-down text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-down text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-down"></i>
                     </button>
                 </div>
@@ -257,24 +278,24 @@
         <div class="field-card p-6" data-type="textarea">
             <div class="flex justify-between mb-4">
                 <input type="text" class="question-text w-full bg-transparent border-b border-gray-600 text-white text-lg focus:border-primary focus:outline-none" placeholder="Question text" />
-                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4">
+                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4 p-1 hover:bg-red-500/10 rounded-full">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
-            <div class="bg-mid/50 rounded-lg p-4 text-light text-sm">
+            <div class="bg-mid/30 rounded-lg p-3 text-light text-sm mb-4">
                 <i class="fas fa-align-left mr-2"></i> Long text answer
             </div>
             <div class="flex items-center justify-between mt-4">
-                <label class="inline-flex items-center cursor-pointer">
+                <label class="inline-flex items-center cursor-pointer group">
                     <input type="checkbox" class="required-toggle sr-only peer">
-                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary group-hover:ring-2 group-hover:ring-primary/20"></div>
                     <span class="ml-3 text-sm font-medium text-gray-300">Required</span>
                 </label>
                 <div class="flex space-x-2">
-                    <button class="move-up text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-up text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button class="move-down text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-down text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-down"></i>
                     </button>
                 </div>
@@ -286,40 +307,40 @@
         <div class="field-card p-6" data-type="multiple_choice">
             <div class="flex justify-between mb-4">
                 <input type="text" class="question-text w-full bg-transparent border-b border-gray-600 text-white text-lg focus:border-primary focus:outline-none" placeholder="Question text" />
-                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4">
+                <button class="delete-field text-gray-400 hover:text-red-500 transition-colors ml-4 p-1 hover:bg-red-500/10 rounded-full">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
             <div class="options-container space-y-2 mb-4">
-                <div class="option-item flex items-center">
-                    <span class="mr-3 text-gray-400"><i class="fas fa-circle text-xs"></i></span>
+                <div class="option-item flex items-center p-2 hover:bg-mid/20 rounded-lg transition-all">
+                    <span class="mr-3 text-primary"><i class="fas fa-circle text-xs"></i></span>
                     <input type="text" class="option-input bg-transparent border-b border-gray-600 text-white focus:border-primary focus:outline-none" placeholder="Option 1" />
-                    <button class="delete-option text-gray-400 hover:text-red-500 transition-colors ml-2">
+                    <button class="delete-option text-gray-400 hover:text-red-500 transition-colors ml-2 p-1 hover:bg-red-500/10 rounded-full">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
-                <div class="option-item flex items-center">
-                    <span class="mr-3 text-gray-400"><i class="fas fa-circle text-xs"></i></span>
+                <div class="option-item flex items-center p-2 hover:bg-mid/20 rounded-lg transition-all">
+                    <span class="mr-3 text-primary"><i class="fas fa-circle text-xs"></i></span>
                     <input type="text" class="option-input bg-transparent border-b border-gray-600 text-white focus:border-primary focus:outline-none" placeholder="Option 2" />
-                    <button class="delete-option text-gray-400 hover:text-red-500 transition-colors ml-2">
+                    <button class="delete-option text-gray-400 hover:text-red-500 transition-colors ml-2 p-1 hover:bg-red-500/10 rounded-full">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             </div>
-            <button class="add-option text-sm text-primary hover:underline flex items-center">
+            <button class="add-option text-sm text-primary hover:bg-primary/10 flex items-center px-3 py-1 rounded-md transition-all">
                 <i class="fas fa-plus mr-1"></i> Add Option
             </button>
             <div class="flex items-center justify-between mt-4">
-                <label class="inline-flex items-center cursor-pointer">
+                <label class="inline-flex items-center cursor-pointer group">
                     <input type="checkbox" class="required-toggle sr-only peer">
-                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    <div class="relative w-11 h-6 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary group-hover:ring-2 group-hover:ring-primary/20"></div>
                     <span class="ml-3 text-sm font-medium text-gray-300">Required</span>
                 </label>
                 <div class="flex space-x-2">
-                    <button class="move-up text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-up text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-up"></i>
                     </button>
-                    <button class="move-down text-gray-400 hover:text-primary transition-colors">
+                    <button class="move-down text-gray-400 hover:text-primary transition-colors p-1 hover:bg-primary/10 rounded-full">
                         <i class="fas fa-arrow-down"></i>
                     </button>
                 </div>
@@ -329,10 +350,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>
-    <!-- Encryption functionality temporarily disabled -->
-    <!-- <script type="module" src="/public/js/formBuilder/encryptedFormBuilder.js"></script> -->
-    
-    <!-- Use standard form builder instead -->
-    <script type="module" src="/public/js/formBuilder/formBuilder.js"></script>
+    <script type="module" src="/public/js/formBuilder/encryptedFormBuilder.js"></script>
 </body>
 </html>

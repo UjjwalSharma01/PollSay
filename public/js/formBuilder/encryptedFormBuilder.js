@@ -35,18 +35,26 @@ document.addEventListener('DOMContentLoaded', async () => {
         .from('team_members')
         .select('org_id')
         .eq('user_id', session.user.id)
-        .single();
+        .maybeSingle(); // Use maybeSingle instead of single to avoid error when no rows found
 
       if (orgError) throw orgError;
+      
+      // If no org data found, disable encryption and return early
+      if (!orgData) {
+        console.log("No organization found for this user");
+        toggleEncryptionBtn.disabled = true;
+        return;
+      }
+      
       orgId = orgData.org_id;
 
       const { data: keyData, error: keyError } = await supabase
         .from('organization_keys')
         .select('public_key')
         .eq('id', orgId)
-        .single();
+        .maybeSingle(); // Use maybeSingle here too
 
-      if (!keyError && keyData) {
+      if (!keyError && keyData && keyData.public_key) {
         // Organization already has keys
         orgPublicKey = keyData.public_key;
         toggleEncryptionBtn.disabled = false;
@@ -56,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     } catch (error) {
       console.error('Error setting up encryption:', error);
-      alert('Could not check encryption status. You can try again later.');
+      toggleEncryptionBtn.disabled = true; // Ensure button is disabled on error
     }
   };
 
