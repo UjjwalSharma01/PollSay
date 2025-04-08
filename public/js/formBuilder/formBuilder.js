@@ -628,6 +628,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (error) throw error;
 
+                // At this point form is created, now the share UI would appear
+                // which contains the access restriction controls
+
                 // Show success message with appropriate restriction info
                 let restrictionMsg = '';
                 if (!formData.allow_all_emails) {
