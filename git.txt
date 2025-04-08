@@ -1,0 +1,8 @@
+# Checkout both branches in different directories
+git worktree add ../main-branch main
+git worktree add ../learning-branch learning
+
+# For each file you want to sync:
+git checkout learning
+git merge-file path/to/file/on/learning ../main-branch/path/to/file/on/main path/to/file/on/learning
+git commit -m "Synced specific file from main"
