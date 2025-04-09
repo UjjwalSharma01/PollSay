@@ -1,61 +1,71 @@
-import { generateShareLink, updateFormAccessSettings } from '../formSharing.js';
+import { supabase } from '../../../src/config/supabase.js';
 
-/**
- * Initialize form sharing functionality
- * @param {string} formId The UUID of the form
- */
-export function initFormSharing(formId) {
-  // Get UI elements
-  const shareButton = document.getElementById('shareFormButton');
-  const shareModal = document.getElementById('shareModal');
-  const shareUrlInput = document.getElementById('shareUrl');
-  const copyUrlButton = document.getElementById('copyUrlButton');
+// Function to update form access settings
+export async function updateFormAccessSettings(formId, settings) {
+  if (!formId) throw new Error('Form ID is required');
+  
+  const { requireLogin = false, allowedEmails = null, responseLimit = null, allowedDomains = null } = settings;
+  
+  // Determine if all emails are allowed (when no restrictions are set)
+  const allowAllEmails = !allowedEmails && !allowedDomains;
+  
+  try {
+    const { data, error } = await supabase
+      .from('forms')
+      .update({
+        require_login: requireLogin,
+        allowed_emails: allowedEmails,
+        response_limit: responseLimit,
+        allowed_domains: allowedDomains,
+        allow_all_emails: allowAllEmails
+      })
+      .eq('id', formId);
+      
+    if (error) throw error;
+    return data;
+  } catch (error) {
+    console.error('Error updating form access settings:', error);
+    throw error;
+  }
+}
+
+// Initialize form sharing UI and event handlers
+export function initFormSharing(formId, shareCode) {
+  // Setup the UI elements
+  const settingsContainer = document.getElementById('form-share-settings');
+  if (!settingsContainer) return;
+  
   const requireLoginCheck = document.getElementById('requireLogin');
   const emailListContainer = document.getElementById('allowedEmailsContainer');
   const addEmailButton = document.getElementById('addEmailButton');
   const emailInput = document.getElementById('allowedEmailInput');
   const saveSettingsButton = document.getElementById('saveAccessSettings');
   const responseLimitInput = document.getElementById('responseLimit');
+  const domainInput = document.getElementById('allowedDomain');
+  const formLinkInput = document.getElementById('formShareLink');
   
-  // Set up event listeners
-  if (shareButton) {
-    shareButton.addEventListener('click', async () => {
-      try {
-        // Generate the share URL
-        const shareUrl = await generateShareLink(formId);
-        
-        // Display in the modal
-        if (shareUrlInput) {
-          shareUrlInput.value = shareUrl;
-        }
-        
-        // Show the modal
-        if (shareModal) {
-          shareModal.classList.remove('hidden');
-        }
-      } catch (error) {
-        console.error('Error sharing form:', error);
-        alert('Failed to generate share link. Please try again.');
-      }
-    });
+  // Set the share link if we have one
+  if (formLinkInput && shareCode) {
+    const baseUrl = window.location.origin;
+    const shareLink = `${baseUrl}/public/form-response.html?code=${shareCode}`;
+    formLinkInput.value = shareLink;
+    
+    // Add copy link button functionality
+    const copyLinkButton = document.getElementById('copyLinkButton');
+    if (copyLinkButton) {
+      copyLinkButton.addEventListener('click', () => {
+        formLinkInput.select();
+        document.execCommand('copy');
+        // Show temporary copied message
+        copyLinkButton.textContent = 'Copied!';
+        setTimeout(() => {
+          copyLinkButton.textContent = 'Copy Link';
+        }, 2000);
+      });
+    }
   }
   
-  // Copy URL button
-  if (copyUrlButton && shareUrlInput) {
-    copyUrlButton.addEventListener('click', () => {
-      shareUrlInput.select();
-      document.execCommand('copy');
-      
-      // Show copied confirmation
-      const originalText = copyUrlButton.innerText;
-      copyUrlButton.innerText = 'Copied!';
-      setTimeout(() => {
-        copyUrlButton.innerText = originalText;
-      }, 2000);
-    });
-  }
-  
-  // Add email button
+  // Add email to list
   if (addEmailButton && emailInput && emailListContainer) {
     addEmailButton.addEventListener('click', () => {
       const email = emailInput.value.trim();
@@ -76,6 +86,17 @@ export function initFormSharing(formId) {
         const responseLimit = responseLimitInput && responseLimitInput.value ? 
           parseInt(responseLimitInput.value, 10) : null;
         
+        // Get domain if provided
+        const allowedDomain = domainInput && domainInput.value ? 
+          domainInput.value.trim() : null;
+        
+        // Format domain (remove @ if present)
+        let formattedDomain = null;
+        if (allowedDomain) {
+          formattedDomain = allowedDomain.startsWith('@') ? 
+            [allowedDomain.substring(1)] : [allowedDomain];
+        }
+        
         // Get all emails from the list
         const allowedEmails = [];
         if (emailListContainer) {
@@ -89,7 +110,8 @@ export function initFormSharing(formId) {
         await updateFormAccessSettings(formId, {
           requireLogin,
           allowedEmails: allowedEmails.length > 0 ? allowedEmails : null,
-          responseLimit
+          responseLimit,
+          allowedDomains: formattedDomain
         });
         
         alert('Access settings saved successfully');
@@ -100,53 +122,70 @@ export function initFormSharing(formId) {
     });
   }
   
-  // Close modal button
-  const closeButtons = document.querySelectorAll('[data-close-modal]');
-  closeButtons.forEach(button => {
-    button.addEventListener('click', () => {
-      if (shareModal) {
-        shareModal.classList.add('hidden');
-      }
-    });
-  });
+  // Load existing settings
+  loadFormSettings(formId);
 }
 
-/**
- * Add an email to the allowed list
- * @param {string} email The email to add
- * @param {HTMLElement} container The container element
- */
+// Helper function to add email to the list
 function addEmailToList(email, container) {
-  const emailItem = document.createElement('div');
-  emailItem.className = 'email-item flex items-center justify-between p-2 bg-gray-100 rounded mb-2';
-  emailItem.dataset.email = email;
+  const item = document.createElement('div');
+  item.className = 'email-item flex items-center space-x-2 bg-mid/20 p-2 rounded mb-2';
+  item.dataset.email = email;
   
-  emailItem.innerHTML = `
-    <span>${email}</span>
+  item.innerHTML = `
+    <span class="text-textColor">${email}</span>
     <button type="button" class="remove-email text-red-500 hover:text-red-700">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-        <path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708z"/>
-      </svg>
+      <i class="fas fa-times"></i>
     </button>
   `;
   
-  // Add remove button functionality
-  const removeButton = emailItem.querySelector('.remove-email');
-  if (removeButton) {
-    removeButton.addEventListener('click', () => {
-      emailItem.remove();
-    });
-  }
+  item.querySelector('.remove-email').addEventListener('click', () => {
+    item.remove();
+  });
   
-  container.appendChild(emailItem);
+  container.appendChild(item);
 }
 
-/**
- * Validate email format
- * @param {string} email The email to validate
- * @returns {boolean} Whether the email is valid
- */
+// Helper function to validate email format
 function isValidEmail(email) {
-  const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return re.test(email);
+  const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+  return re.test(String(email).toLowerCase());
+}
+
+// Load existing form settings
+async function loadFormSettings(formId) {
+  try {
+    const { data, error } = await supabase
+      .from('forms')
+      .select('require_login, allowed_emails, response_limit, allowed_domains, allow_all_emails')
+      .eq('id', formId)
+      .single();
+      
+    if (error) throw error;
+    
+    // Update UI with existing settings
+    const requireLoginCheck = document.getElementById('requireLogin');
+    const responseLimitInput = document.getElementById('responseLimit');
+    const domainInput = document.getElementById('allowedDomain');
+    const emailListContainer = document.getElementById('allowedEmailsContainer');
+    
+    if (requireLoginCheck) requireLoginCheck.checked = data.require_login || false;
+    if (responseLimitInput) responseLimitInput.value = data.response_limit || '';
+    
+    // Set domain if available
+    if (domainInput && data.allowed_domains && data.allowed_domains.length > 0) {
+      domainInput.value = data.allowed_domains[0];
+    }
+    
+    // Add emails to the list
+    if (emailListContainer && data.allowed_emails && data.allowed_emails.length > 0) {
+      emailListContainer.innerHTML = '';
+      data.allowed_emails.forEach(email => {
+        addEmailToList(email, emailListContainer);
+      });
+    }
+    
+  } catch (error) {
+    console.error('Error loading form settings:', error);
+  }
 }

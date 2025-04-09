@@ -1,4 +1,5 @@
 import { supabase } from '../../../src/config/supabase.js';
+import { initFormSharing } from './shareForm.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     // Add dynamic styles for animations and better UX
@@ -82,27 +83,45 @@ document.addEventListener('DOMContentLoaded', () => {
     document.head.appendChild(styleEl);
 
     const formFields = document.getElementById('form-fields');
-    // Fix the ID to match what's in the HTML
     const addFieldBtn = document.getElementById('add-field');
-    // Define fieldMenu correctly based on the HTML structure
     const fieldMenu = document.querySelector('.dropdown-content');
-    const saveFormBtn = document.getElementById('save-form');  // Use existing save button
+    
+    // Find the ORIGINAL save button - don't create a new one
+    const saveFormBtn = document.getElementById('save-form');
+    
+    if (saveFormBtn) {
+        // Update button text but keep it simple
+        saveFormBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Form';
+        
+        // Remove existing listeners to avoid duplicates
+        const newSaveBtn = saveFormBtn.cloneNode(true);
+        saveFormBtn.parentNode.replaceChild(newSaveBtn, saveFormBtn);
+        
+        // Add our listener that will show the form preview
+        newSaveBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const formData = collectFormData();
+            if (formData.fields.length === 0) {
+                alert('Please add at least one field to save the form.');
+                return;
+            }
+            
+            // First, collect access control settings via prompts
+            collectAccessSettings(formData);
+            
+            return false;
+        });
+    } else {
+        console.error("Save form button not found.");
+    }
 
-    // Remove the code that tries to create and append another save button
-    // No need for this code since the save button already exists in HTML:
-    // saveFormBtn.id = 'save-form-btn';
-    // saveFormBtn.textContent = 'Save Form';  
-    // saveFormBtn.className = '...';
-    // saveFormBtn.innerHTML = '<i class="fas fa-save mr-2"></i>Save Form';
-    // addFieldBtn.parentElement.appendChild(saveFormBtn);
-
-    // Toggle field menu
     addFieldBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         fieldMenu.classList.toggle('hidden');
     });
 
-    // Close menu when clicking outside
     document.addEventListener('click', (e) => {
         if (!addFieldBtn.contains(e.target) && 
             !fieldMenu.contains(e.target)) {
@@ -110,18 +129,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // Handle field type selection
     document.querySelectorAll('[data-type]').forEach(btn => {
         btn.addEventListener('click', () => {
             const fieldType = btn.dataset.type;
-            // Normalize field types to ensure consistency
             const normalizedType = normalizeFieldType(fieldType);
             addField(normalizedType);
             fieldMenu.classList.add('hidden');
         });
     });
 
-    // Normalize field types to ensure consistency with response handler
     function normalizeFieldType(type) {
         const typeMap = {
             'textarea': 'long-text',
@@ -132,7 +148,6 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeMap[type] || type;
     }
 
-    // Add new field
     function addField(type) {
         console.log(`Trying to add field of type: ${type}`);
         const normalizedType = normalizeFieldType(type);
@@ -148,8 +163,6 @@ document.addEventListener('DOMContentLoaded', () => {
         formFields.appendChild(clone);
 
         const newField = formFields.lastElementChild;
-        
-        // Add entrance animation
         newField.classList.add('field-entrance');
         setTimeout(() => newField.classList.remove('field-entrance'), 500);
         
@@ -157,7 +170,6 @@ document.addEventListener('DOMContentLoaded', () => {
         attachFieldEvents(newField);
     }
 
-    // Create a default field if template is missing
     function createDefaultField(type) {
         const defaultFieldHTML = `
             <div class="field-wrapper p-4 mb-4 bg-mid/30 backdrop-blur-sm rounded-lg border border-mid/50 shadow-lg field-entrance">
@@ -189,7 +201,6 @@ document.addEventListener('DOMContentLoaded', () => {
         attachFieldEvents(defaultField);
     }
 
-    // Get specific HTML based on field type
     function getTypeSpecificHTML(type) {
         const normalizedType = normalizeFieldType(type);
         
@@ -242,12 +253,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 
             default:
                 console.error(`Unknown field type: ${type} (normalized to: ${normalizedType})`);
-                // Default to short text if type is unrecognized
                 return getTypeSpecificHTML('short-text');
         }
     }
 
-    // Attach events to a field
     function attachFieldEvents(field) {
         const requiredToggle = field.querySelector('.required-toggle');
         if (requiredToggle) {
@@ -272,16 +281,12 @@ document.addEventListener('DOMContentLoaded', () => {
         field.querySelector('.duplicate-field')?.addEventListener('click', () => {
             const duplicate = field.cloneNode(true);
             formFields.appendChild(duplicate);
-            
-            // Add entrance animation
             duplicate.classList.add('field-entrance');
             setTimeout(() => duplicate.classList.remove('field-entrance'), 500);
-            
             attachFieldEvents(duplicate);
         });
 
         field.querySelector('.delete-field')?.addEventListener('click', () => {
-            // Add exit animation
             field.classList.add('field-exit');
             setTimeout(() => field.remove(), 300);
         });
@@ -309,7 +314,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Attach events to an option
     function attachOptionEvents(option) {
         const removeOptionBtn = option.querySelector('.remove-option');
         if (removeOptionBtn) {
@@ -320,17 +324,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // Save Form Event Listener
-    saveFormBtn.addEventListener('click', () => {
-        const formData = collectFormData();
-        if (formData.fields.length === 0) {
-            alert('Please add at least one field to save the form.');
-            return;
-        }
-        showPreviewModal(formData);
-    });
-
-    // Collect Form Data
     function collectFormData() {
         const title = document.querySelector('input[placeholder="Untitled Form"]').value.trim();
         const description = document.querySelector('input[placeholder="Form Description"]').value.trim();
@@ -340,7 +333,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const question = field.querySelector('input[placeholder="Question"]').value.trim();
             const helpText = field.querySelector('input[placeholder="Help text (optional)"]')?.value.trim() || '';
             
-            // Enhanced required detection
             const requiredToggle = field.querySelector('.required-toggle');
             const isRequired = requiredToggle ? 
                 (requiredToggle.classList.contains('text-primary') || 
@@ -349,7 +341,6 @@ document.addEventListener('DOMContentLoaded', () => {
             let type = '';
             let options = [];
 
-            // More robust field type detection
             if (field.querySelector('textarea')) {
                 type = 'long-text';
             } else if (field.querySelector('.options-container')) {
@@ -361,7 +352,6 @@ document.addEventListener('DOMContentLoaded', () => {
                         type = 'checkbox';
                     }
                 } else {
-                    // Fallback detection by looking at the icon
                     const icon = field.querySelector('.option-item span i');
                     if (icon) {
                         type = icon.classList.contains('fa-circle-dot') ? 'multiple-choice' : 'checkbox';
@@ -386,54 +376,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 helpText,
                 required: isRequired,
                 options,
-                // Add field_type_key to ensure consistency with responseHandler
                 field_type_key: mapTypeToResponseKey(type)
             });
         });
 
-        // Collect participation restrictions values
-        /* 
-        // Participation restrictions feature - commented out for future implementation
-        const allowedDomain = document.getElementById('allowed-domain').value.trim();
-        const invitedEmailsRaw = document.getElementById('invited-emails').value.trim();
-        const invitedEmails = invitedEmailsRaw ? invitedEmailsRaw.split(',').map(email => email.trim()).filter(email => email) : [];
-        
-        // Validate email format for invited emails
-        const invalidEmails = invitedEmails.filter(email => !isValidEmail(email));
-        if (invalidEmails.length > 0) {
-            alert(`Invalid email format: ${invalidEmails.join(', ')}`);
-            return null;
-        }
-        
-        // Extract domain without @ if present
-        let formattedDomain = null;
-        if (allowedDomain) {
-            formattedDomain = allowedDomain.startsWith('@') ? allowedDomain.substring(1) : allowedDomain;
-        }
-        
-        const restrictions = {
-            allowed_domains: formattedDomain ? [formattedDomain] : null,
-            allowed_emails: invitedEmails.length > 0 ? invitedEmails : null,
-            allow_all_emails: !(formattedDomain || invitedEmails.length > 0)
-        };
-        */
-        const restrictions = {}; // Default empty restrictions
-        
         const formData = {
             title,
             description,
             fields,
-            // Participation restrictions feature commented out:
-            // allowed_domains: restrictions.allowed_domains,
-            // allowed_emails: restrictions.allowed_emails,
-            // allow_all_emails: restrictions.allow_all_emails
         };
 
-        console.log('Collected form data with restrictions (disabled):', formData);
+        console.log('Collected form data:', formData);
         return formData;
     }
     
-    // Map form builder types to response handler types
     function mapTypeToResponseKey(formBuilderType) {
         const typeMap = {
             'short-text': 'text',
@@ -444,163 +400,80 @@ document.addEventListener('DOMContentLoaded', () => {
         return typeMap[formBuilderType] || formBuilderType;
     }
 
-    // Add email validation helper
-    function isValidEmail(email) {
-        const re = /^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-        return re.test(String(email).toLowerCase());
-    }
-
-    // Show Preview Modal
-    function showPreviewModal(formData) {
-        if (!formData) return; // Don't proceed if form data is invalid
+    function collectAccessSettings(formData) {
+        const requireVerification = confirm("Does this form require email verification?\n\nIf you click OK, respondents will need to verify their email to access the form.");
         
-        const modalBg = document.createElement('div');
-        modalBg.className = 'fixed inset-0 bg-black bg-opacity-70 backdrop-blur-sm flex items-center justify-center z-50';
-
-        const modalContent = document.createElement('div');
-        modalContent.className = 'bg-dark rounded-lg p-6 w-11/12 md:w-2/3 lg:w-1/2 overflow-y-auto max-h-screen border border-mid glass-effect';
-
-        // Modal Header
-        const header = document.createElement('h2');
-        header.className = 'text-2xl font-bold mb-4 text-textColor bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent';
-        header.textContent = 'Form Preview';
-        modalContent.appendChild(header);
-
-        // Form Title and Description
-        const formTitle = document.createElement('h3');
-        formTitle.className = 'text-xl font-semibold text-textColor';
-        formTitle.textContent = formData.title || 'Untitled Form';
-        modalContent.appendChild(formTitle);
-
-        const formDesc = document.createElement('p');
-        formDesc.className = 'text-light mb-4';
-        formDesc.textContent = formData.description || '';
-        modalContent.appendChild(formDesc);
-
-        // Form Fields
-        const previewForm = document.createElement('form');
-        previewForm.className = 'space-y-4';
-        formData.fields.forEach(field => {
-            const fieldDiv = document.createElement('div');
-            fieldDiv.className = 'mb-4 p-4 rounded-lg bg-mid/30 backdrop-blur-sm';
-
-            const question = document.createElement('label');
-            question.className = 'block text-textColor font-medium mb-2';
-            question.textContent = field.question + (field.required ? ' *' : '');
-            fieldDiv.appendChild(question);
-
-            if (field.type === 'short-text') {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.className = 'w-full px-3 py-2 bg-mid/50 border border-mid rounded-lg text-textColor focus:ring-2 focus:ring-primary focus:border-transparent';
-                input.disabled = true;
-                fieldDiv.appendChild(input);
-            } else if (field.type === 'long-text') {
-                const textarea = document.createElement('textarea');
-                textarea.className = 'w-full px-3 py-2 bg-mid/50 border border-mid rounded-lg text-textColor focus:ring-2 focus:ring-primary focus:border-transparent';
-                textarea.disabled = true;
-                fieldDiv.appendChild(textarea);
-            } else if (field.type === 'multiple-choice') {
-                field.options.forEach(option => {
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'flex items-center mb-2';
-                    const input = document.createElement('input');
-                    input.type = 'radio';
-                    input.name = field.question;
-                    input.disabled = true;
-                    input.className = 'mr-2 text-primary focus:ring-primary';
-                    const label = document.createElement('label');
-                    label.className = 'text-textColor';
-                    label.textContent = option;
-                    optionDiv.appendChild(input);
-                    optionDiv.appendChild(label);
-                    fieldDiv.appendChild(optionDiv);
-                });
-            } else if (field.type === 'checkbox') {
-                field.options.forEach(option => {
-                    const optionDiv = document.createElement('div');
-                    optionDiv.className = 'flex items-center mb-2';
-                    const input = document.createElement('input');
-                    input.type = 'checkbox';
-                    input.disabled = true;
-                    input.className = 'mr-2 text-primary focus:ring-primary';
-                    const label = document.createElement('label');
-                    label.className = 'text-textColor';
-                    label.textContent = option;
-                    optionDiv.appendChild(input);
-                    optionDiv.appendChild(label);
-                    fieldDiv.appendChild(optionDiv);
-                });
-            }
-
-            if (field.helpText) {
-                const help = document.createElement('p');
-                help.className = 'text-sm text-light mt-1';
-                help.textContent = field.helpText;
-                fieldDiv.appendChild(help);
-            }
-
-            previewForm.appendChild(fieldDiv);
-        });
-        modalContent.appendChild(previewForm);
-
-        // Create the form section for restrictions if present
-        /*
-        // Participation restrictions display - commented out for now
-        if (formData.allowed_domains || formData.allowed_emails) {
-            const restrictionsDiv = document.createElement('div');
-            restrictionsDiv.className = 'mt-4 p-4 rounded-lg bg-yellow-900/20 border border-yellow-900/30';
+        const restrictions = {
+            require_login: requireVerification,
+            allow_all_emails: true,
+            allowed_domains: null,
+            allowed_emails: null,
+            response_limit: null
+        };
+        
+        if (requireVerification) {
+            const useDomainRestriction = confirm("Do you want to restrict access to specific email domains?\n\nFor example, only allow emails from 'company.com'.");
             
-            const restrictionsTitle = document.createElement('h4');
-            restrictionsTitle.className = 'text-sm font-medium text-yellow-500 mb-2';
-            restrictionsTitle.innerHTML = '<i class="fas fa-lock mr-2"></i>Access Restrictions';
-            restrictionsDiv.appendChild(restrictionsTitle);
-            
-            if (formData.allowed_domains) {
-                const domainP = document.createElement('p');
-                domainP.className = 'text-xs text-light';
-                domainP.textContent = `Only emails with domain: ${formData.allowed_domains.join(', ')}`;
-                restrictionsDiv.appendChild(domainP);
+            if (useDomainRestriction) {
+                const domain = prompt("Enter the email domain to allow (e.g., 'company.com'):");
+                if (domain && domain.trim() !== '') {
+                    restrictions.allowed_domains = [domain.trim()];
+                    restrictions.allow_all_emails = false;
+                }
             }
             
-            if (formData.allowed_emails) {
-                const emailsP = document.createElement('p');
-                emailsP.className = 'text-xs text-light';
-                emailsP.textContent = `Limited to specific emails: ${formData.allowed_emails.length} invited`;
-                restrictionsDiv.appendChild(emailsP);
+            const useSpecificEmails = confirm("Do you want to allow specific email addresses to access this form?");
+            
+            if (useSpecificEmails) {
+                const emailsInput = prompt("Enter email addresses separated by commas:");
+                if (emailsInput && emailsInput.trim() !== '') {
+                    const emails = emailsInput.split(',').map(email => email.trim()).filter(email => email);
+                    if (emails.length > 0) {
+                        restrictions.allowed_emails = emails;
+                        restrictions.allow_all_emails = false;
+                    }
+                }
             }
             
-            modalContent.appendChild(restrictionsDiv);
+            const useResponseLimit = confirm("Do you want to limit the number of responses per user?");
+            
+            if (useResponseLimit) {
+                const limit = prompt("Enter maximum number of responses per user:");
+                const parsedLimit = parseInt(limit);
+                if (!isNaN(parsedLimit) && parsedLimit > 0) {
+                    restrictions.response_limit = parsedLimit;
+                }
+            }
         }
-        */
-
-        // Modal Buttons
-        const buttonDiv = document.createElement('div');
-        buttonDiv.className = 'flex justify-end mt-6 space-x-3';
-
-        const editBtn = document.createElement('button');
-        editBtn.type = 'button';
-        editBtn.textContent = 'Edit';
-        editBtn.className = 'px-4 py-2 rounded-lg border border-mid hover:bg-mid/50 text-textColor transition-all duration-300';
-        editBtn.addEventListener('click', () => {
-            document.body.removeChild(modalBg);
-        });
-
-        const shareBtn = document.createElement('button');
-        shareBtn.type = 'button';
-        shareBtn.innerHTML = '<i class="fas fa-share-alt mr-2"></i>Share';
-        shareBtn.className = 'gradient-btn text-white px-4 py-2 rounded-lg hover:shadow-lg hover:shadow-primary/20 transition-all duration-300';
-        shareBtn.addEventListener('click', async () => {
-            // Check if user is logged in
+        
+        const settingsSummary = `Form Access Settings:
+        - Email verification: ${restrictions.require_login ? 'Required' : 'Not required'}
+        ${restrictions.allowed_domains ? `- Allowed domains: ${restrictions.allowed_domains.join(', ')}` : ''}
+        ${restrictions.allowed_emails ? `- Allowed emails: ${restrictions.allowed_emails.join(', ')}` : ''}
+        ${restrictions.response_limit ? `- Response limit: ${restrictions.response_limit} per user` : ''}
+        ${restrictions.allow_all_emails && restrictions.require_login ? '- Any verified email can access' : ''}
+        ${!restrictions.require_login ? '- Anyone can access (no restrictions)' : ''}`;
+        
+        const confirmSettings = confirm(`${settingsSummary}\n\nAre these settings correct?`);
+        
+        if (confirmSettings) {
+            saveFormWithAccessControls(formData, restrictions);
+        } else {
+            alert("Let's try again. You'll be asked to set access controls again.");
+            collectAccessSettings(formData);
+        }
+    }
+    
+    async function saveFormWithAccessControls(formData, restrictions) {
+        try {
             const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
             if (!sessionData?.session) {
                 alert('Please log in before creating a form.');
                 return;
             }
 
-            // Retrieve user and org info (adjust key names as per your setup)
             const userID = sessionData.session.user.id;
-            const orgID = sessionData.session.user.user_metadata?.org_id; // or wherever org_id is stored
+            const orgID = sessionData.session.user.user_metadata?.org_id;
 
             if (!orgID) {
                 alert('No organization found. Please ensure your account has an associated org_id.');
@@ -608,6 +481,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const shareCode = generateRandomString(12);
+            
             const formToSave = {
                 title: formData.title,
                 description: formData.description,
@@ -615,50 +489,62 @@ document.addEventListener('DOMContentLoaded', () => {
                 share_code: shareCode,
                 org_id: orgID,
                 created_by: userID,
-                // Add restrictions to the form submission
-                // allowed_domains: formData.allowed_domains,
-                // allowed_emails: formData.allowed_emails,
-                // allow_all_emails: formData.allow_all_emails
+                require_login: restrictions.require_login,
+                allowed_domains: restrictions.allowed_domains,
+                allowed_emails: restrictions.allowed_emails,
+                response_limit: restrictions.response_limit,
+                allow_all_emails: restrictions.allow_all_emails
             };
 
-            try {
-                const { data, error } = await supabase
-                    .from('forms')
-                    .insert([formToSave]);
+            console.log("Saving form with access controls:", formToSave);
+            
+            const { data, error } = await supabase
+                .from('forms')
+                .insert([formToSave])
+                .select();
 
-                if (error) throw error;
+            if (error) throw error;
 
-                // Show success message with appropriate restriction info
-                let restrictionMsg = '';
-                if (!formData.allow_all_emails) {
-                    restrictionMsg = '\n\nNote: This form has access restrictions in place.';
-                }
-
-                // Construct the share link and copy it to clipboard
-                const shareLink = `pollsay/${shareCode}`;
-                try {
-                    await navigator.clipboard.writeText(shareLink);
-                    alert(`Form created successfully! Link copied to clipboard.${restrictionMsg}`);
-                } catch (err) {
-                    alert(`Form created successfully! Please copy the link: ${shareLink}${restrictionMsg}`);
-                }
-                document.body.removeChild(modalBg);
+            const shareURL = `${window.location.origin}/public/form-response.html?code=${shareCode}`;
+            
+            let accessSummary = "Form created successfully!";
+            
+            if (restrictions.require_login) {
+                accessSummary += "\n\n• Email verification required";
                 
-            } catch (error) {
-                console.error('Error saving form:', error);
-                alert('Error saving form: ' + error.message);
+                if (restrictions.allowed_domains) {
+                    accessSummary += `\n• Limited to domain: ${restrictions.allowed_domains.join(', ')}`;
+                }
+                
+                if (restrictions.allowed_emails) {
+                    accessSummary += `\n• Limited to ${restrictions.allowed_emails.length} specific email(s)`;
+                }
+                
+                if (restrictions.response_limit) {
+                    accessSummary += `\n• Maximum ${restrictions.response_limit} response(s) per user`;
+                }
+                
+                if (restrictions.allow_all_emails) {
+                    accessSummary += "\n• Any verified email can access";
+                }
+            } else {
+                accessSummary += "\n\n• Anyone can access (no restrictions)";
             }
-        });
-
-        buttonDiv.appendChild(editBtn);
-        buttonDiv.appendChild(shareBtn);
-        modalContent.appendChild(buttonDiv);
-
-        modalBg.appendChild(modalContent);
-        document.body.appendChild(modalBg);
+            
+            alert(`${accessSummary}\n\nForm Link: ${shareURL}`);
+            
+            navigator.clipboard.writeText(shareURL).then(() => {
+                console.log('Share link copied to clipboard');
+            }).catch(err => {
+                console.error('Could not copy link: ', err);
+            });
+            
+        } catch (error) {
+            console.error('Error saving form:', error);
+            alert('Error saving form: ' + error.message);
+        }
     }
 
-    // Generate Random String
     function generateRandomString(length) {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
         let result = '';

@@ -171,5 +171,162 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="module" src="/src/config/supabase.js"></script>
     <script type="module" src="/public/js/formResponse/responseHandler.js"></script>
+    <script type="module">
+        import { validateFormAccess } from '/public/js/formResponse/formResponseValidation.js';
+        import { supabase } from '/src/config/supabase.js';
+
+        // Form access control check
+        document.addEventListener('DOMContentLoaded', async () => {
+            const formContent = document.getElementById('form-content');
+            const loadingIndicator = document.getElementById('loading-indicator');
+            
+            // Get form ID or share code from URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const formId = urlParams.get('id');
+            const shareCode = urlParams.get('code');
+            
+            if (!formId && !shareCode) {
+                showAccessDenied('Invalid form link. Please check the URL and try again.');
+                return;
+            }
+            
+            try {
+                // Get user session if available
+                const { data: { session } } = await supabase.auth.getSession();
+                const userEmail = session?.user?.email;
+                
+                // Validate form access
+                const { hasAccess, formData, reason, error } = await validateFormAccess(
+                    formId, 
+                    shareCode, 
+                    userEmail
+                );
+                
+                if (error) {
+                    showAccessDenied(`Error: ${error}`);
+                    return;
+                }
+                
+                if (!hasAccess) {
+                    // Show appropriate access denied message with sign-in option if needed
+                    showAccessDenied(reason || 'You do not have permission to access this form.', 
+                        !userEmail && formData?.require_login);
+                    return;
+                }
+                
+                // If access is granted, display the form
+                loadingIndicator.style.display = 'none';
+                formContent.style.display = 'block';
+                // Store the respondent email for submission
+                window.respondentEmail = userEmail;
+                
+            } catch (error) {
+                console.error('Error checking form access:', error);
+                showAccessDenied('Error checking form access. Please try again later.');
+            }
+        });
+        
+        function showAccessDenied(message, showSignIn = false) {
+            // Hide loading and form
+            const loadingIndicator = document.getElementById('loading-indicator');
+            const formContent = document.getElementById('form-content');
+            const successMessage = document.getElementById('success-message');
+            
+            // Hide any visible elements
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
+            if (formContent) formContent.style.display = 'none';
+            if (successMessage) successMessage.style.display = 'none';
+            
+            // Get or create the access denied container
+            let accessDeniedContainer = document.getElementById('access-denied-container');
+            
+            if (!accessDeniedContainer) {
+                // Create it if it doesn't exist
+                accessDeniedContainer = document.createElement('div');
+                accessDeniedContainer.id = 'access-denied-container';
+                accessDeniedContainer.className = 'max-w-xl mx-auto bg-white rounded-xl shadow-lg p-8 text-center mt-8';
+                
+                // Create icon
+                const icon = document.createElement('div');
+                icon.className = 'text-red-500 text-6xl mb-4';
+                icon.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>';
+                
+                const title = document.createElement('h2');
+                title.className = 'text-2xl font-bold text-gray-800 mb-3';
+                title.textContent = 'Access Denied';
+                
+                const messageEl = document.createElement('p');
+                messageEl.className = 'message text-gray-600 mb-6';
+                messageEl.textContent = message;
+                
+                const signInButton = document.createElement('button');
+                signInButton.className = 'sign-in-button px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-lg transition-colors';
+                signInButton.textContent = 'Sign in with Email';
+                signInButton.style.display = showSignIn ? 'inline-block' : 'none';
+                signInButton.addEventListener('click', () => {
+                    // Redirect to sign-in page with return URL
+                    const returnUrl = encodeURIComponent(window.location.href);
+                    window.location.href = `/public/signin.html?returnUrl=${returnUrl}`;
+                });
+                
+                // Add everything to the container
+                accessDeniedContainer.appendChild(icon);
+                accessDeniedContainer.appendChild(title);
+                accessDeniedContainer.appendChild(messageEl);
+                accessDeniedContainer.appendChild(signInButton);
+                
+                // Add container to the document
+                const main = document.querySelector('main');
+                main.appendChild(accessDeniedContainer);
+            } else {
+                // Update existing container
+                const messageEl = accessDeniedContainer.querySelector('.message');
+                if (messageEl) messageEl.textContent = message;
+                
+                const signInButton = accessDeniedContainer.querySelector('.sign-in-button');
+                if (signInButton) signInButton.style.display = showSignIn ? 'inline-block' : 'none';
+                
+                // Make sure it's visible
+                accessDeniedContainer.style.display = 'block';
+            }
+        }
+        
+        // Override the form submission handler to include email validation
+        const originalSubmitForm = window.submitForm;
+        window.submitForm = async function(event) {
+            event.preventDefault();
+            
+            // Check if user has access again before submission
+            const urlParams = new URLSearchParams(window.location.search);
+            const formId = urlParams.get('id');
+            const shareCode = urlParams.get('code');
+            const { data: { session } } = await supabase.auth.getSession();
+            const userEmail = session?.user?.email;
+            
+            const { hasAccess, reason } = await validateFormAccess(
+                formId, 
+                shareCode, 
+                userEmail
+            );
+            
+            if (!hasAccess) {
+                alert(reason || 'You do not have permission to submit this form.');
+                return;
+            }
+            
+            // Include the respondent email in the submission
+            const formData = new FormData(event.target);
+            formData.append('respondent_email', userEmail);
+            
+            // Call the original submit function or handle submission
+            if (typeof originalSubmitForm === 'function') {
+                return originalSubmitForm.call(this, event, formData);
+            } else {
+                // Default submission logic if original function not available
+                // This would need to be implemented based on your existing code
+                console.log('Form submission function not found');
+            }
+        };
+    </script>
 </body>
 </html>
