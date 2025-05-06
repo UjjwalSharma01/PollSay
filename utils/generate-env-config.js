@@ -21,13 +21,14 @@ try {
 const safeEnvVars = {
   // Only include client-safe variables here - NEVER use hardcoded credentials
   SUPABASE_URL: process.env.SUPABASE_URL || "__MISSING_SUPABASE_URL__",
-  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "__MISSING_SUPABASE_ANON_KEY__"
+  SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || "__MISSING_SUPABASE_ANON_KEY__",
+  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || "__MISSING_SUPABASE_SERVICE_KEY__"
 };
 
 // Validate that we have the necessary variables
-if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY) {
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_ANON_KEY || !process.env.SUPABASE_SERVICE_KEY) {
   console.error('Error: Missing required environment variables in .env file.');
-  console.error('Make sure your .env file includes SUPABASE_URL and SUPABASE_ANON_KEY');
+  console.error('Make sure your .env file includes SUPABASE_URL, SUPABASE_ANON_KEY, and SUPABASE_SERVICE_KEY');
   process.exit(1);
 }
 
