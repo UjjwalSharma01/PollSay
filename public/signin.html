@@ -7,8 +7,12 @@
     <meta name="theme-color" content="#1a1a1a">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="robots" content="index, follow">
-<!-- Supabase CDN - Only include once! -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    
+    <!-- Environment config must be loaded before Supabase -->
+    <script src="/public/js/env-config.js"></script>
+    
+    <!-- Supabase CDN - Only include once! -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     
     <!-- Performance optimization: Preload critical resources -->
     <link rel="preload" href="https://cdn.tailwindcss.com" as="script">

@@ -30,8 +30,14 @@
       if (window.supabase && !window.fallbackInitialized) {
         try {
           console.log('Creating fallback Supabase client');
-          const SUPABASE_URL = "https://hqrqmgamnjrpkvalaopl.supabase.co";
-          const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcnFtZ2FtbmpycGt2YWxhb3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3Njc2NDEsImV4cCI6MjA1MjM0MzY0MX0.oCAwphEjbuecQhWrhybc3q3fIjncvDIYJkjWTxxNjlg";
+          // Use window.ENV if available or placeholders
+          const SUPABASE_URL = (window.ENV && window.ENV.SUPABASE_URL) || "__MISSING_SUPABASE_URL__";
+          const SUPABASE_ANON_KEY = (window.ENV && window.ENV.SUPABASE_ANON_KEY) || "__MISSING_SUPABASE_ANON_KEY__";
+          
+          if (SUPABASE_URL === "__MISSING_SUPABASE_URL__" || SUPABASE_ANON_KEY === "__MISSING_SUPABASE_ANON_KEY__") {
+            console.error("Missing Supabase credentials. Make sure env-config.js is loaded.");
+          }
+          
           window.fallbackClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
           window.fallbackInitialized = true;
           

@@ -5,9 +5,15 @@
 (function() {
   console.log("Direct initialization script running");
   
-  // Constants for Supabase
-  const SUPABASE_URL = "https://hqrqmgamnjrpkvalaopl.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcnFtZ2FtbmpycGt2YWxhb3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3Njc2NDEsImV4cCI6MjA1MjM0MzY0MX0.oCAwphEjbuecQhWrhybc3q3fIjncvDIYJkjWTxxNjlg";
+  // Constants for Supabase - using window.ENV if available or placeholder values
+  // IMPORTANT: This script should be loaded AFTER env-config.js
+  const SUPABASE_URL = (window.ENV && window.ENV.SUPABASE_URL) || "__MISSING_SUPABASE_URL__";
+  const SUPABASE_ANON_KEY = (window.ENV && window.ENV.SUPABASE_ANON_KEY) || "__MISSING_SUPABASE_ANON_KEY__";
+
+  // Check if either URL or key is missing
+  if (SUPABASE_URL === "__MISSING_SUPABASE_URL__" || SUPABASE_ANON_KEY === "__MISSING_SUPABASE_ANON_KEY__") {
+    console.error("Missing Supabase credentials. Make sure env-config.js is loaded before this script.");
+  }
 
   // Check if Supabase is already defined
   if (window.supabase) {

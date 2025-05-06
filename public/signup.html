@@ -3,9 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Sign up for PollSay - Enterprise anonymous feedback platform">
+    <meta name="theme-color" content="#1a1a1a">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="robots" content="index, follow">
     <title>PollSay - Multi-Step Form</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
+    
+    <!-- Environment config must be loaded before Supabase -->
+    <script src="/public/js/env-config.js"></script>
     
     <!-- Supabase CDN - Only include once! -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -291,6 +298,9 @@
 <div id="toast" class="fixed top-4 right-4 max-w-md p-4 rounded-xl shadow-lg transform transition-all duration-300 scale-0">
     <!-- Will be styled based on success/error -->
 </div>
+
+<!-- Scripts loading order matters! Load env-config before other scripts -->
+<script src="/public/js/env-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script type="module" src="/src/config/supabase.js"></script>
 <script type="module" src="/public/js/signup/script.js"></script>

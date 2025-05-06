@@ -13,9 +13,10 @@
     "postcss": "^8.4.33"
   },
   "scripts": {
-    "dev": "npx tailwindcss -i ./src/input.css -o ./public/output.css --watch",
-    "build": "npx tailwindcss -i ./src/input.css -o ./public/output.css --minify",
-    "start": "node server/authApi.js"
+    "dev": "node utils/generate-env-config.js && npx tailwindcss -i ./src/input.css -o ./public/output.css --watch",
+    "build": "node utils/generate-env-config.js && npx tailwindcss -i ./src/input.css -o ./public/output.css --minify",
+    "start": "node utils/generate-env-config.js && node server/authApi.js",
+    "gen-env": "node utils/generate-env-config.js"
   },
   "name": "pollsay",
   "version": "1.0.0",

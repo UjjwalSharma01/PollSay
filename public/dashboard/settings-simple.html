@@ -8,14 +8,24 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Environment config must be loaded before Supabase -->
+    <script src="/public/js/env-config.js"></script>
+    
     <!-- Load Supabase first to ensure it's available -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // Initialize supabase early
         window.addEventListener('DOMContentLoaded', () => {
             if (!window.supabaseClient) {
-                const SUPABASE_URL = "https://hqrqmgamnjrpkvalaopl.supabase.co";
-                const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhxcnFtZ2FtbmpycGt2YWxhb3BsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzY3Njc2NDEsImV4cCI6MjA1MjM0MzY0MX0.oCAwphEjbuecQhWrhybc3q3fIjncvDIYJkjWTxxNjlg";
+                // Use window.ENV for credentials, or placeholders if not available
+                const SUPABASE_URL = (window.ENV && window.ENV.SUPABASE_URL) || "__MISSING_SUPABASE_URL__";
+                const SUPABASE_ANON_KEY = (window.ENV && window.ENV.SUPABASE_ANON_KEY) || "__MISSING_SUPABASE_ANON_KEY__";
+                
+                // Check if we have valid credentials
+                if (SUPABASE_URL === "__MISSING_SUPABASE_URL__" || SUPABASE_ANON_KEY === "__MISSING_SUPABASE_ANON_KEY__") {
+                    console.error("Missing Supabase credentials. Make sure env-config.js is loaded properly.");
+                }
+                
                 window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 console.log("Supabase initialized in settings-simple.html");
             }

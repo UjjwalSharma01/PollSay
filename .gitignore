@@ -1,5 +1,24 @@
-*.code-workspacesendgrid.env
-sendgrid.env
+*.code-workspace
 sendgrid.env
 /*.code-workspace
 /node_modules/
+
+# Environment variables
+.env
+.env.local
+.env.development
+.env.test
+.env.production
+
+# Generated environment configs that may contain credentials
+/public/js/env-config.js
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Dependency directories
+node_modules/

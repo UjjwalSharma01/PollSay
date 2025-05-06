@@ -1,3 +1,5 @@
+// Import environment config first to ensure it's available before the Supabase client is initialized
+import '../../../src/config/env.js';
 import { supabase } from '../../../src/config/supabase.js';
 
 // Define utility functions outside the DOMContentLoaded event
