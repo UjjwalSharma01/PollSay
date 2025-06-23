@@ -1,4 +1,4 @@
-import { supabase } from '../../../src/config/supabase.js';
+import { supabase } from '../../config/supabase.js';
 
 /**
  * Initialize dashboard common elements and user session

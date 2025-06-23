@@ -9,7 +9,7 @@
     <meta name="robots" content="index, follow">
     
     <!-- Environment config must be loaded before Supabase -->
-    <script src="/public/js/env-config.js"></script>
+    <script src="js/env-config.js"></script>
     
     <!-- Supabase CDN - Only include once! -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -20,7 +20,7 @@
     
     <!-- Core CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/tailwind.config.js"></script>
+    <script src="../tailwind.config.js"></script>
 
     <!-- External Dependencies -->
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/alpinejs/3.13.3/cdn.min.js"></script>
@@ -137,7 +137,7 @@
                         <!-- Sign Up Link -->
                                            <p class="mt-8 text-center text-sm text-[#999999]">
                             Don't have an account?
-                            <a href="/public/signup.html" class="text-[#7C4DFF] hover:text-[#00B8D4] transition-colors font-medium">
+                            <a href="/signup.html" class="text-[#7C4DFF] hover:text-[#00B8D4] transition-colors font-medium">
                                 Sign up
                             </a>
                         </p>
@@ -148,7 +148,7 @@
     </main>
 
     <!-- Scripts -->
-    <script type="module" src="/src/config/supabase.js"></script>
-    <script type="module" src="/public/js/signin/script.js"></script>
+    <script type="module" src="config/supabase.js"></script>
+    <script type="module" src="js/signin/script.js"></script>
 </body>
 </html>

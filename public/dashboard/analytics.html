@@ -6,7 +6,7 @@
     <title>Response Analytics | PollSay</title>
     
     <!-- Environment config must be loaded before Supabase -->
-    <script src="/public/js/env-config.js"></script>
+    <script src="/js/env-config.js"></script>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -261,12 +261,12 @@
     </div>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script type="module" src="/src/config/supabase.js"></script>
-    <script type="module" src="/public/js/dashboard/analytics.js"></script>
+    <script type="module" src="/config/supabase.js"></script>
+    <script type="module" src="/js/dashboard/analytics.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
     <script type="module">
         import { initializeDashboard } from '../js/dashboard/dashboard-utils.js';
-        import { supabase } from '../../src/config/supabase.js';
+        import { supabase } from '../../public/config/supabase.js';
         
         document.addEventListener('DOMContentLoaded', async () => {
             // Initialize common dashboard elements
@@ -313,7 +313,7 @@
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', async function() {
                     try {
-                        const { supabase } = await import('/src/config/supabase.js');
+                        const { supabase } = await import('/public/config/supabase.js');
                         await supabase.auth.signOut();
                         window.location.href = '/public/signin.html';
                     } catch (error) {
@@ -325,6 +325,6 @@
         });
     </script>
 
-        <script src="/public/js/supabase-loader.js"></script>
+    <script src="/js/supabase-loader.js"></script>
 </body>
 </html>

@@ -12,10 +12,12 @@
     <link href="https://fonts.googleapis.com/css?family=Poppins:300,400,500,600,700&display=swap" rel="stylesheet">
     
     <!-- Environment config must be loaded before Supabase -->
-    <script src="/public/js/env-config.js"></script>
+    <script src="js/env-config.js"></script>
     
     <!-- Supabase CDN - Only include once! -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="config/supabase.js"></script>
     
     <script>
         tailwind.config = {
@@ -300,10 +302,10 @@
 </div>
 
 <!-- Scripts loading order matters! Load env-config before other scripts -->
-<script src="/public/js/env-config.js"></script>
+<script src="js/env-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script type="module" src="/src/config/supabase.js"></script>
-<script type="module" src="/public/js/signup/script.js"></script>
+<script type="module" src="config/supabase.js"></script>
+<script type="module" src="js/signup/script.js"></script>
 
 
 </body>

@@ -10,7 +10,11 @@ const ENV = {
   
   SUPABASE_ANON_KEY: typeof window !== 'undefined' && window.ENV && window.ENV.SUPABASE_ANON_KEY 
     ? window.ENV.SUPABASE_ANON_KEY 
-    : (typeof process !== 'undefined' && process.env.SUPABASE_ANON_KEY || "__MISSING_SUPABASE_ANON_KEY__")
+    : (typeof process !== 'undefined' && process.env.SUPABASE_ANON_KEY || "__MISSING_SUPABASE_ANON_KEY__"),
+    
+  SUPABASE_SERVICE_KEY: typeof window !== 'undefined' && window.ENV && window.ENV.SUPABASE_SERVICE_KEY 
+    ? window.ENV.SUPABASE_SERVICE_KEY 
+    : (typeof process !== 'undefined' && process.env.SUPABASE_SERVICE_KEY || "__MISSING_SUPABASE_SERVICE_KEY__")
 };
 
 export default ENV;

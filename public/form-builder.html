@@ -6,7 +6,7 @@
     <title>Form Builder | PollSay</title>
     
     <!-- Environment config must be loaded before Supabase -->
-    <script src="/public/js/env-config.js"></script>
+    <script src="/js/env-config.js"></script>
     
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -355,7 +355,9 @@
         </div>
     </template>
 
-    <script type="module" src="/src/config/supabase.js"></script>
-    <script type="module" src="/public/js/formBuilder/encryptedFormBuilder.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="/config/supabase.js"></script>
+    <script type="module" src="/js/formBuilder/formBuilder.js"></script>
 </body>
 </html>
