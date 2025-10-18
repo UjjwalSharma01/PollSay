@@ -46,6 +46,7 @@ For detailed documentation, please refer to the following:
 - [API Documentation and Code Structure](docs/overview.md#api-documentation-and-code-structure)
 - [User Guide and Contribution Guidelines](docs/overview.md#user-guide-and-contribution-guidelines)
 - [Security Measures and Scripts Documentation](docs/overview.md#security-measures-and-scripts-documentation)
+- [MERN Migration Plan](docs/mern-migration-plan.md)
 
 ## Contact
 
